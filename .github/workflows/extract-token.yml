@@ -41,7 +41,7 @@ jobs:
           echo "✅ TG 变量已配置，继续。"
 
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 先发一条测试消息，确认 TG 链路通；收不到说明是 bot/chat_id 配置问题
       - name: 测试 TG 连通性（发测试消息）
