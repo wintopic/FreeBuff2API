@@ -662,6 +662,6 @@ FreeBuff2API 会处理本地 API key 与 FreeBuff authToken。默认只监听 `1
 
 ## 📄 License
 
-本项目采用 [AGPL-3.0 License](LICENSE)。本项目参考并改写了 [freebuff2api](https://github.com/XxxXTeam/freebuff2api) 的部分代码与结构（原项目为 AGPL-3.0），因此本项目同样以 AGPL-3.0 开源；使用时请保留原版权声明，欢迎自由使用、修改与分享。
+本项目采用 [AGPL-3.0 License](LICENSE)。本项目参考并改写了 [freebuff2api](https://github.com/XxxXTeam/freebuff2api) 的部分代码与结构（原项目为 AGPL-3.0），因此本项目同样以 AGPL-3.0 开源；使用时请保留 [`NOTICE.md`](NOTICE.md) 中的版权与来源声明，欢迎自由使用、修改与分享。
 
 
