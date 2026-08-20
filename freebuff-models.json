@@ -1,81 +1,94 @@
 {
-  "generatedAt": "2026-08-11T00:01:42.299Z",
+  "generatedAt": "2026-08-20T13:02:13.430Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
       "id": "mimo/mimo-v2.5",
       "session": "mimo/mimo-v2.5",
       "agent": "base2-free-mimo",
+      "root_agent": "base2-free-mimo",
+      "base3_agent": "base3-free-mimo",
+      "reviewer_agent": "code-reviewer-mimo",
       "upstream": "mimo/mimo-v2.5"
     },
     {
       "id": "minimax/minimax-m3",
       "session": "minimax/minimax-m3",
       "agent": "base2-free-minimax-m3",
+      "root_agent": "base2-free-minimax-m3",
+      "base3_agent": "base3-free-minimax-m3",
+      "reviewer_agent": "code-reviewer-minimax-m3",
       "upstream": "minimax/minimax-m3"
     },
     {
       "id": "openai/gpt-5.6-luna",
       "session": "openai/gpt-5.6-luna",
       "agent": "base2-free-luna",
+      "root_agent": "base2-free-luna",
+      "base3_agent": "base3-free-luna",
+      "reviewer_agent": "code-reviewer-luna",
       "upstream": "openai/gpt-5.6-luna"
     },
     {
       "id": "deepseek/deepseek-v4-pro",
       "session": "deepseek/deepseek-v4-pro",
       "agent": "base2-free-deepseek",
+      "root_agent": "base2-free-deepseek",
+      "base3_agent": "base3-free-deepseek",
+      "reviewer_agent": "code-reviewer-deepseek",
       "upstream": "deepseek/deepseek-v4-pro"
     },
     {
       "id": "deepseek/deepseek-v4-flash",
       "session": "deepseek/deepseek-v4-flash",
       "agent": "base2-free-deepseek-flash",
+      "root_agent": "base2-free-deepseek-flash",
+      "base3_agent": "base3-free-deepseek-flash",
+      "reviewer_agent": "code-reviewer-deepseek-flash",
       "upstream": "deepseek/deepseek-v4-flash"
     },
     {
       "id": "z-ai/glm-5.2",
       "session": "z-ai/glm-5.2",
       "agent": "base2-free-glm",
+      "root_agent": "base2-free-glm",
+      "base3_agent": "base3-free-glm",
+      "reviewer_agent": "code-reviewer-glm",
       "upstream": "z-ai/glm-5.2"
-    },
-    {
-      "id": "poolside/laguna-s-2.1",
-      "session": "poolside/laguna-s-2.1",
-      "agent": "base2-free-laguna-s-2-1",
-      "upstream": "poolside/laguna-s-2.1"
-    },
-    {
-      "id": "openrouter/poolside/laguna-s-2.1",
-      "session": "openrouter/poolside/laguna-s-2.1",
-      "agent": "base2-free-laguna-s-2-1-openrouter",
-      "upstream": "openrouter/poolside/laguna-s-2.1"
     },
     {
       "id": "crof/kimi-k3-eco",
       "session": "crof/kimi-k3-eco",
       "agent": "base2-free-kimi-k3-eco",
+      "root_agent": "base2-free-kimi-k3-eco",
+      "base3_agent": "base3-free-kimi-k3-eco",
+      "reviewer_agent": null,
       "upstream": "crof/kimi-k3-eco"
     },
     {
       "id": "anthropic/claude-fable-5",
       "session": "anthropic/claude-fable-5",
       "agent": "base2-free-fable",
+      "root_agent": "base2-free-fable",
+      "base3_agent": null,
+      "reviewer_agent": "code-reviewer-fable",
       "upstream": "anthropic/claude-fable-5"
     },
     {
       "id": "meta/muse-spark-1.2-contributor",
       "session": "meta/muse-spark-1.2-contributor",
       "agent": "base2-free-muse-spark",
+      "root_agent": "base2-free-muse-spark",
+      "base3_agent": "base3-free-muse-spark",
+      "reviewer_agent": null,
       "upstream": "meta/muse-spark-1.2-contributor"
     }
   ],
   "pools": {
     "premium": [
-      "minimax/minimax-m3",
-      "deepseek/deepseek-v4-pro",
+      "deepseek/deepseek-v4-flash",
       "openai/gpt-5.6-luna",
-      "poolside/laguna-s-2.1",
-      "openrouter/poolside/laguna-s-2.1",
+      "deepseek/deepseek-v4-pro",
       "crof/kimi-k3-eco",
       "meta/muse-spark-1.2-contributor"
     ],
@@ -84,7 +97,7 @@
     ],
     "standard": [
       "mimo/mimo-v2.5",
-      "deepseek/deepseek-v4-flash",
+      "minimax/minimax-m3",
       "anthropic/claude-fable-5"
     ]
   }
