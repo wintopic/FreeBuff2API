@@ -1,20 +1,22 @@
-version: "3.8"
-
 services:
   freebuff2api:
-    image: ${DOCKERHUB_USERNAME}/freebuff2api:latest
+    build: .
+    image: freebuff2api:local
     container_name: freebuff2api
     restart: unless-stopped
     ports:
       - "8877:8787"
+    env_file:
+      - .env
     environment:
-      - PORT=8787
-      - HOST=0.0.0.0
-      # 上游地址：默认空=直连官方 www.codebuff.com；如走自建中继可设为中继域名
-      - CODEBUFF_API=
-      - RELAY_KEY=${RELAY_KEY}
-      - FREEBUFF_API_KEY=${FREEBUFF_API_KEY}
-      - FREEBUFF_DEBUG=false
+      PORT: "8787"
+      HOST: "0.0.0.0"
+      HTTP_PROXY: "${DOCKER_PROXY:-}"
+      HTTPS_PROXY: "${DOCKER_PROXY:-}"
+      ALL_PROXY: "${DOCKER_PROXY:-}"
+      NO_PROXY: "${NO_PROXY:-127.0.0.1,localhost}"
+      NODE_USE_ENV_PROXY: "1"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
-      # 统一凭证：直接复用本地工具的 freebuff_credentials.json（多账号聚合格式）
-      - ./freebuff_tools/freebuff_credentials.json:/app/credentials/freebuff_credentials.json:ro
+      - ./credentials:/app/credentials:ro

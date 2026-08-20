@@ -20,7 +20,7 @@ jobs:
       - name: 设置 Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: 运行解析脚本（生成 freebuff-models.json + MODELS.md）
         run: |
@@ -37,7 +37,7 @@ jobs:
             gh release create "$TAG" --repo "${GITHUB_REPOSITORY}" \
               --title "Freebuff Models (auto)" \
               --notes "每日自动更新的动态模型映射快照（Worker 兜底源）" \
-              --latest
+              --prerelease
           gh release delete-asset "$TAG" "$FILE" --repo "${GITHUB_REPOSITORY}" --yes 2>/dev/null || true
           gh release upload "$TAG" "$FILE" --repo "${GITHUB_REPOSITORY}" --clobber
           echo "✅ Release asset 已更新 (tag: $TAG)"
@@ -46,7 +46,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add MODELS.md
+          git add MODELS.md freebuff-models.json
           if git diff --cached --quiet; then
             echo "MODELS.md 无变化，跳过提交"
           else

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞
+    url: https://github.com/wintopic/FreeBuff2API/security/policy
+    about: 请按安全政策私下报告，不要公开真实凭据或利用细节

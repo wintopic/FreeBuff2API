@@ -1,6 +1,7 @@
 # 凭据与密钥绝对不能进镜像/构建上下文
 .env
 .env.*
+!.env.example
 credentials/
 wrangler.toml
 freebuff_tools/freebuff_credentials.json
@@ -21,3 +22,9 @@ CHANGELOG.md
 README.md
 MODELS.md
 freebuff-models.json
+launcher/
+dist/
+.tools/
+start-local.ps1
+stop-local.ps1
+login-freebuff.ps1

@@ -26,10 +26,10 @@ const DYNAMIC_MODELS_STABLE_IDS_SOURCES = [
   "https://cdn.jsdelivr.net/gh/CodebuffAI/freebuff@main/common/src/constants/freebuff-model-ids.ts",
 ];
 // Releases 兜底源：GitHub Actions 每天生成的解析好的 JSON（无需解析，直接可用）
-// 当官方 3 个源全部失败/解析失败时使用。比 raw.githubusercontent 更稳（GitHub CDN）。
-// 已实测（2026-08-11）：releases/latest/download 地址 HTTP 200，内容正确。
+// 当官方 3 个源全部失败/解析失败时使用。固定 models-cache tag，避免版本 Release
+// 改变 releases/latest 指向后导致模型快照 404。
 const DYNAMIC_MODELS_RELEASE_SOURCES = [
-  "https://github.com/pingmike2/freebuff2api-wokers/releases/latest/download/freebuff-models.json",
+  "https://github.com/wintopic/FreeBuff2API/releases/download/models-cache/freebuff-models.json",
 ];
 // 刷新间隔：与 Quorinex 对齐，6 小时。失败时回退到硬编码 MODELS。
 const DYNAMIC_MODELS_REFRESH_MS = 6 * 60 * 60 * 1000;

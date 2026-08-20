@@ -1,6 +1,21 @@
 node_modules/
 .dev.vars
 test/worker_tmp.mjs
+.vs/
+*.user
+*.suo
+
+# 本地构建、运行时与发布产物
+/.tools/
+/dist/
+/launcher/bin/
+/launcher/obj/
+/launcher/publish-*/
+/launcher/runtime/node.exe
+/launcher/runtime/NODE_LICENSE.txt
+/launcher/runtime/.env
+/launcher/runtime/credentials/
+/launcher/runtime/logs/
 
 # 凭证/token 文件，绝不提交
 freebuff_tools/freebuff_credentials.json
@@ -30,6 +45,7 @@ wrangler.toml
 # ⚠️ .env 及所有带真实变量值的文件，绝不提交
 .env
 .env.*
+!.env.example
 
 # 本地日志分析文件，绝不提交
 logs/
