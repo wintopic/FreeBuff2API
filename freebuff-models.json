@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T06:58:02.709Z",
+  "generatedAt": "2026-08-21T13:01:01.254Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
@@ -82,6 +82,15 @@
       "base3_agent": "base3-free-muse-spark",
       "reviewer_agent": null,
       "upstream": "meta/muse-spark-1.2-contributor"
+    },
+    {
+      "id": "stealth/ox-alpha",
+      "session": "stealth/ox-alpha",
+      "agent": "base2-free-ox-alpha",
+      "root_agent": "base2-free-ox-alpha",
+      "base3_agent": "base3-free-ox-alpha",
+      "reviewer_agent": null,
+      "upstream": "stealth/ox-alpha"
     }
   ],
   "pools": {
@@ -98,7 +107,8 @@
     "standard": [
       "mimo/mimo-v2.5",
       "minimax/minimax-m3",
-      "anthropic/claude-fable-5"
+      "anthropic/claude-fable-5",
+      "stealth/ox-alpha"
     ]
   }
 }
