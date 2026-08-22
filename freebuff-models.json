@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-22T01:39:41.550Z",
+  "generatedAt": "2026-08-22T06:51:16.226Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
@@ -66,6 +66,15 @@
       "upstream": "crof/kimi-k3-eco"
     },
     {
+      "id": "openai/gpt-5.6-luna-es",
+      "session": "openai/gpt-5.6-luna-es",
+      "agent": "base2-free-luna-es",
+      "root_agent": "base2-free-luna-es",
+      "base3_agent": "base3-free-luna-es",
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.6-luna-es"
+    },
+    {
       "id": "anthropic/claude-fable-5",
       "session": "anthropic/claude-fable-5",
       "agent": "base2-free-fable",
@@ -99,6 +108,7 @@
       "openai/gpt-5.6-luna",
       "deepseek/deepseek-v4-pro",
       "crof/kimi-k3-eco",
+      "openai/gpt-5.6-luna-es",
       "meta/muse-spark-1.2-contributor"
     ],
     "glm": [
