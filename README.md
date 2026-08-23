@@ -34,7 +34,8 @@ FreeBuff2API 把 FreeBuff 的 session、agent-runs 和流式上游请求整理�
 ## ✨ 特性
 
 - ⭐ **动态模型映射**：定期解析 FreeBuff 公共源码，并用仓库快照和内置表兜底
-- 🔒 **常规模型基础额度**：除上述两个特殊模型外，普通模型按每日 6 次 session 的基础额度理解；不会宣传为无限量
+- 🛑 **动态暂停模型保护**：同步官方 `FREEBUFF_PAUSED_FREE_MODEL_IDS`，自动隐藏暂停模型并识别 `410 model_unavailable`
+- 🔒 **额度语义同步**：Premium 当前共享上限按 4 次/天说明，Luna 单独 cap 等变化以官方快照和账号返回为准
 - 🔁 **多账号自动切换**：撞额度自动冷却并切换，逗号分隔即可
 - 💡 **优先复用活跃 session**：一个 session 约 1 小时有效，创建 session 才扣额度；只要当前模型的 session 还活跃就钉在同一账号上，用满再换，最大化额度利用率
 - 📢 **广告与 streak 流程兼容**：创建新 session 前，Worker 会按官方客户端流程请求广告，并调用 `GET /api/v1/freebuff/streak` 尝试签到；相关请求失败会静默跳过，不阻塞聊天
@@ -78,18 +79,18 @@ OpenAI SDK / Anthropic SDK / 常见客户端
 >
 > Anthropic API 是新增的协议适配层，不改变现有 OpenAI `/v1/chat/completions`、`/v1/responses`、账号轮换、session 生命周期和 Freebuff 主调用链。
 
-## ⭐ 特殊模型：DeepSeek V4 Flash 与 MiMo 2.5
+## ⭐ 默认与 fallback 模型
 
-FreeBuff Desktop 在完整模式下将下面两个模型归入 **unlimited 非 Premium 类别**。这里的 `unlimited` 主要表示模型分类和并发类别，**不是对所有账号、地区、接口和时间都作绝对无限量保证**。本地部署是否进入完整模式由实际出口和账号状态决定：
+官方模型分类会随时间变化。`unlimited` 只表示某个快照中的分类或并发桶，**不是对所有账号、地区、接口和时间都作绝对无限量保证**。当前目录和状态以 [`MODELS.md`](MODELS.md) 及 `/v1/models` 为准：
 
 | 模型 | 完整模式下的说明 |
 |---|---|
-| `deepseek/deepseek-v4-flash` | 官方非 Premium 模型；主力推荐，当前 Worker 探测未显示基础日限额 |
-| `mimo/mimo-v2.5` | 官方非 Premium 模型；当前 Worker 探测未显示基础日限额 |
+| `deepseek/deepseek-v4-flash` | 当前 Premium；主力推荐模型 |
+| `mimo/mimo-v2.5` | 当前标准/fallback 模型；均衡性能 |
 
-> ⚠️ 受限模式可能对 DeepSeek V4 Flash 和 MiMo 2.5 设置 session 上限。最终可用性和实际额度以 FreeBuff 上游返回为准，官方规则也可能调整。
+> ⚠️ 账号资格、地区、时段和上游动态策略可能改变最终可用性。实际额度以上游返回为准。
 
-除这两个特殊模型外，普通模型统一按 **每日 6 次基础 session / 太平洋日** 理解（北京时间约 15:00 重置）。`referral`、`streak`、独立共享池和上游临时限制属于额外条件，不能据此宣传为无限量。
+官方当前 Premium 共享 session 上限为 4 次/天；Luna 另有每模型 2 次/天 cap。MiMo 等非 Premium 模型不应被宣传为绝对无限。`referral`、`streak`、独立共享池和上游临时限制属于额外条件，不能据此宣传为无限量。
 
 > 💡 **关于额度**：额度通常按「创建 session」计算。活跃 session 内的多轮对话可以复用同一 session，实际规则以账号和上游返回为准。
 >
@@ -188,7 +189,7 @@ DOCKER_PROXY=http://host.docker.internal:3067
 
 ```bash
 curl http://127.0.0.1:8877/healthz
-# {"status":"ok","version":"1.8.9","accounts":2,"time":"..."}
+# {"status":"ok","version":"1.8.11","accounts":2,"time":"..."}
 ```
 
 - `version` 用于确认正在运行的 Worker 逻辑版本
@@ -457,33 +458,30 @@ curl http://127.0.0.1:8877/v1/messages \
 ## 模型与额度
 
 > 映射来源：Freebuff Desktop 0.0.51（`orchestrator.js` 官方 `FREEBUFF_ROOT_AGENT_ID_BY_MODEL`，2026-08-07 实测同步）。
-> 模型分类来自 FreeBuff 公共源码与实测快照。实际访问模式由出口、账号资格和上游策略共同决定。除特殊模型外，其余模型可按有限 session 额度理解；额度通常在创建 session 时扣减。
+> 模型分类来自 FreeBuff 公共源码与自动快照。实际访问模式由出口、账号资格和上游策略共同决定；额度通常在创建 session 时扣减。
 
-### ⭐ 完整模式特殊模型：非 Premium
+### ⭐ 完整模式特殊模型：以官方当前分类为准
 
-官方 Desktop 在完整访问模式下将下面两个模型归入 `unlimited` 非 Premium 类别。这里的 `unlimited` 主要表示官方模型分类和 Desktop 并发类别，**不是任何账号、接口或时间段的绝对无限量承诺**。Worker 当前探测也未在 `rateLimitsByModel` 中看到它们的基础日限额。
+官方模型分类会随时间变化。`unlimited` 只表示某个快照中的分类或 Desktop 并发桶，**不是任何账号、接口或时间段的绝对无限量承诺**。当前模型目录和暂停状态以 [`MODELS.md`](MODELS.md) 及 `/v1/models` 为准。
 
 | API 模型名 | session 模型 | 上游 agentId | 说明 |
 |---|---|---|---|
-| `deepseek/deepseek-v4-flash` | 同左 | `base2-free-deepseek-flash` | 完整模式特殊模型；主力推荐 |
-| `mimo/mimo-v2.5` | 同左 | `base2-free-mimo` | 完整模式特殊模型；均衡性能 |
+| `mimo/mimo-v2.5` | 同左 | `base2-free-mimo` | 标准/fallback 模型；均衡性能 |
+| `deepseek/deepseek-v4-flash` | 同左 | `base2-free-deepseek-flash` | 当前 Premium；主力推荐 |
 
-> ⚠️ 受限模式可能对这两个模型设置 session 上限。最终可用性和实际额度仍以 FreeBuff 上游返回为准。
+> ⚠️ 账号资格、地区、时段和上游动态策略可能改变最终可用性。实际额度仍以上游返回为准。
 
-### 🔒 普通模型：每日 6 次基础额度
+### 🔒 Premium 与标准额度
 
-以下模型没有“无限量”说明，统一按每日 6 次基础 session 处理；实际额度可能因账号、官方 `referral` / `streak`、通道状态或上游规则变化而不同。
+官方当前 Premium 共享 session 上限为 4 次/天；Luna 另有每模型 2 次/天 cap，DeepSeek V4 Pro 当前没有旧版本中的单模型 cap。MiMo 等非 Premium 模型不应被宣传为绝对无限。所有数字仅用于解释官方规则，实际可用性以账号返回的 `rateLimitsByModel`、`status` 和 HTTP 错误为准。
 
 | API 模型名 | session 模型 | 上游 agentId |
 |---|---|---|
-| `minimax/minimax-m3` | 同左 | `base2-free-minimax-m3` |
+| `deepseek/deepseek-v4-flash` | 同左 | `base2-free-deepseek-flash` |
 | `deepseek/deepseek-v4-pro` | 同左 | `base2-free-deepseek` |
 | `openai/gpt-5.6-luna` | 同左 | `base2-free-luna` |
-| `poolside/laguna-s-2.1` | 同左 | `base2-free-laguna-s-2-1` |
-| `openrouter/poolside/laguna-s-2.1` | 同左 | `base2-free-laguna-s-2-1-openrouter` |
-| `inclusionai/ling-3.0-flash:free` | 同左 | `base2-free-ling-3-flash` |
-| `crof/greg-2-ultra` | 同左 | `base2-free-greg-2-ultra` |
-| `crof/greg-2-super` | 同左 | `base2-free-greg-2-super` |
+| `openai/gpt-5.6-luna-es` | 同左 | `base2-free-luna-es` |
+| `crof/kimi-k3-eco` | 同左 | `base2-free-kimi-k3-eco` |
 | `meta/muse-spark-1.2-contributor` | 同左 | `base2-free-muse-spark` |
 
 ### 🎁 独立资格或容量限制
@@ -494,8 +492,11 @@ curl http://127.0.0.1:8877/v1/messages \
 |---|---|---|---|
 | `z-ai/glm-5.2` | 同左 | `base2-free-glm` | 需 referral / streak 等官方资格，使用独立额度池 |
 | `anthropic/claude-fable-5` | 同左 | `base2-free-fable` | 官方容量限制试用，可能按时段开放 |
+| `stealth/ox-alpha` | 同左 | `base2-free-ox-alpha` | 实验性/服务资格限制，实际以官方返回为准 |
 
-> 📝 实测补充（2026-08-08）：`ling-3.0-flash:free` 上游可能返回 404 并提示改用付费 slug；`claude-fable-5` 免费账号建 session 可能被上游拒绝（`session_model_mismatch`）。这些现象属于上游可用性问题，不代表 Worker 映射失效。
+### 🛑 已暂停或下线模型
+
+模型暂停不是账号额度耗尽。Worker 会从动态快照读取官方暂停列表，将其从 `/v1/models` 隐藏；旧客户端仍请求暂停模型时返回 `unsupported_model`。截至本次快照，`minimax/minimax-m3` 处于暂停状态，DeepSeek V4 Flash 已恢复并按 Premium 处理。收到上游 `410 model_unavailable` 时，网关会立即返回，不会无意义地轮换其他账号。
 
 ## 👥 多账号
 
@@ -537,7 +538,7 @@ flowchart TD
 
 ### 动态模型表
 
-模型 ID 和上游 agent 映射会随 FreeBuff 公共源码变化。Worker 会读取模型常量和 agent 映射，解析 Premium、GLM、Standard 池，再与仓库内静态表合并。源码解析失败时会尝试读取 GitHub Release 中的 `freebuff-models.json`，所有动态源不可用时继续使用内置表。
+模型 ID、上游 agent 映射和暂停列表会随 FreeBuff 公共源码变化。Worker 会读取模型常量和 agent 映射，解析 Premium、GLM、Standard 池及 `FREEBUFF_PAUSED_FREE_MODEL_IDS`，再与仓库内静态表合并。源码解析失败时会尝试读取 GitHub Release 中的 `freebuff-models.json`；旧快照没有暂停字段时只使用保守的 MiniMax M3 兜底，避免把历史上已恢复的模型永久屏蔽。
 
 动态模型缓存有效期为 6 小时。`/v1/models` 不会为了测活而创建 session，所以查询模型不会占用上游额度。
 
@@ -603,7 +604,7 @@ Worker 已自动处理以上全部生命周期，无需手动干预。另：syst
 
 仓库对 `main` 和 Pull Request 自动运行以下检查：
 
-- Node.js 24 JavaScript 语法检查
+- Node.js 24 JavaScript 语法与模型状态回归测试
 - Docker Compose 配置校验与镜像构建
 - 全部 PowerShell 脚本解析
 - .NET 9 Windows 启动器 Release 构建
@@ -611,7 +612,7 @@ Worker 已自动处理以上全部生命周期，无需手动干预。另：syst
 本地最小检查：
 
 ```powershell
-npm run check
+npm test
 dotnet build launcher/FreeBuffLauncher.csproj -c Release
 ```
 

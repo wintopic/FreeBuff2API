@@ -14,7 +14,7 @@
 服务端改动至少运行：
 
 ```bash
-npm run check
+npm test
 ```
 
 模型解析改动运行：

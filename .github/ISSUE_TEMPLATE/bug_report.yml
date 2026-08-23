@@ -14,7 +14,7 @@ body:
     attributes:
       label: 版本
       description: healthz 返回的版本、提交哈希或 Release 版本
-      placeholder: 1.8.9 / abc1234
+      placeholder: 1.8.11 / abc1234
     validations:
       required: true
 

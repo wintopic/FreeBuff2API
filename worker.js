@@ -1,8 +1,14 @@
 const CODEBUFF_API = "https://www.codebuff.com";
 const DEFAULT_MODEL = "deepseek/deepseek-v4-flash";
 const DEFAULT_API_KEY = "freebuff-default-key";
-const VERSION = "1.8.9";
+const VERSION = "1.8.11";
 const CONTEXT_PRUNER_AGENT = "context-pruner";
+
+// 仅在官方动态源不可用或旧快照没有暂停字段时使用。成功解析官方源后，
+// 该名单会被完整替换，避免把已经恢复的历史模型继续误判为暂停。
+const FALLBACK_PAUSED_MODEL_IDS = new Set([
+  "minimax/minimax-m3",
+]);
 
 // 动态模型注册表：从官方 freebuff 镜像拉取模型清单
 // 真源: https://github.com/CodebuffAI/freebuff (freebuff-private 的 public 镜像)
@@ -40,6 +46,8 @@ let dynamicModelsCache = {
   fetchedAt: 0,
   models: null, // 动态模型表（含分类）
   pool: null, // { premium: Set, standard: Set, glm: Set }
+  paused: new Set(), // 官方 FREEBUFF_PAUSED_FREE_MODEL_IDS
+  pausedKnown: false, // true 表示已读取官方暂停列表（包括明确为空）
 };
 
 // 解析 freebuff-models.ts 的模型 ID 常量
@@ -159,6 +167,28 @@ function parseModelPools(source, modelIdConstants) {
   return { premium: [...premium], glm: [...glm] };
 }
 
+// 解析官方 FREEBUFF_PAUSED_FREE_MODEL_IDS。found 用来区分“官方明确列表为空”
+// 和“旧快照/解析器没有这个常量”，后者只能使用保守兜底名单。
+function parsePausedModels(source, modelIdConstants) {
+  const listRe = /export\s+const\s+FREEBUFF_PAUSED_FREE_MODEL_IDS\b[^=]*=\s*\[([^\]]*)\]/;
+  const listMatch = listRe.exec(source || "");
+  if (!listMatch) return { found: false, ids: new Set() };
+
+  const ids = new Set();
+  const listBody = listMatch[1]
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+  const itemRe = /'([^']*)'|"([^"]*)"|([A-Za-z0-9_]+)/g;
+  let item;
+  while ((item = itemRe.exec(listBody)) !== null) {
+    const literal = item[1] ?? item[2];
+    const expression = item[3];
+    if (literal) ids.add(literal);
+    else if (expression && modelIdConstants[expression]) ids.add(modelIdConstants[expression]);
+  }
+  return { found: true, ids };
+}
+
 // 动态模型表：分别记录普通 root、base3 root、reviewer。
 function buildDynamicModelTable(agentMappings) {
   // 兼容旧调用：传入单张 root mapping 时仍可正常构建。
@@ -193,18 +223,21 @@ function mergeModelTables(hardcoded, dynamic) {
 // 拉取并刷新动态模型缓存（失败静默回退）
 async function fetchSourceList(urls) {
   for (const url of urls) {
+    let timer = null;
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), DYNAMIC_MODELS_FETCH_TIMEOUT_MS);
+      timer = setTimeout(() => ctrl.abort(), DYNAMIC_MODELS_FETCH_TIMEOUT_MS);
       const resp = await fetch(url, { signal: ctrl.signal });
-      clearTimeout(timer);
       if (resp.ok) {
         const text = await resp.text();
         // 阈值放宽：freebuff-model-ids.ts 只有 ~491B（3 个常量），
         // 500 阈值会误杀。只过滤真正的空文件（<100B）。
         if (text && text.length > 100) return text;
       }
-    } catch {}
+    } catch {
+    } finally {
+      if (timer !== null) clearTimeout(timer);
+    }
   }
   return null;
 }
@@ -244,6 +277,7 @@ async function refreshDynamicModelsIfStale() {
       return dynamicModelsCache;
     }
     const pools = parseModelPools(modelsSrc, modelIdConstants);
+    const pausedInfo = parsePausedModels(modelsSrc, modelIdConstants);
     dynamicModelsCache = {
       fetchedAt: Date.now(),
       models: buildDynamicModelTable(agentMappings),
@@ -252,6 +286,8 @@ async function refreshDynamicModelsIfStale() {
         standard: null,
         glm: new Set(pools.glm),
       },
+      paused: pausedInfo.found ? pausedInfo.ids : new Set(FALLBACK_PAUSED_MODEL_IDS),
+      pausedKnown: pausedInfo.found,
     };
   } catch {
     // 解析崩溃：尝试 Releases 兜底
@@ -268,26 +304,42 @@ async function refreshDynamicModelsIfStale() {
 // Releases JSON 兜底：直接拉预生成的 models.json，零解析成本
 async function tryReleaseFallback() {
   for (const url of DYNAMIC_MODELS_RELEASE_SOURCES) {
+    let timer = null;
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), DYNAMIC_MODELS_FETCH_TIMEOUT_MS);
+      timer = setTimeout(() => ctrl.abort(), DYNAMIC_MODELS_FETCH_TIMEOUT_MS);
       const resp = await fetch(url, { signal: ctrl.signal });
-      clearTimeout(timer);
       if (resp.ok) {
         const json = await resp.json();
         if (json && Array.isArray(json.models) && json.models.length > 0) {
+          const pausedList = Array.isArray(json.paused)
+            ? json.paused
+            : Array.isArray(json.pausedModels) ? json.pausedModels : null;
+          const hasPaused = Array.isArray(pausedList);
+          const paused = new Set(hasPaused ? pausedList : FALLBACK_PAUSED_MODEL_IDS);
+          const premium = new Set(json.pools?.premium ?? []);
+          const glm = new Set(json.pools?.glm ?? []);
+          for (const id of paused) {
+            premium.delete(id);
+            glm.delete(id);
+          }
           return {
             fetchedAt: Date.now(),
             models: json.models,
             pool: {
-              premium: new Set(json.pools?.premium ?? []),
+              premium,
               standard: null,
-              glm: new Set(json.pools?.glm ?? []),
+              glm,
             },
+            paused,
+            pausedKnown: hasPaused,
           };
         }
       }
-    } catch {}
+    } catch {
+    } finally {
+      if (timer !== null) clearTimeout(timer);
+    }
   }
   return null;
 }
@@ -304,6 +356,7 @@ function dynamicStandardModels() {
 // 模型池分类查询：动态池优先，硬编码兜底
 // 返回 "premium" | "standard" | "glm" | null
 function modelPoolCategory(modelId) {
+  if (isPausedModel(modelId)) return null;
   const dyn = dynamicModelsCache;
   if (dyn && dyn.pool) {
     if (dyn.pool.premium.has(modelId)) return "premium";
@@ -318,27 +371,21 @@ function modelPoolCategory(modelId) {
 
 
 // 模型 → session 用模型名 / 上游 agentId / 上游 chat 模型名
-// 只保留 1 个硬编码兜底（极端情况下至少有一个可用）：
-//   - mimo/mimo-v2.5   STANDARD 模型
-// 其余模型全部由动态拉取提供（官方源 → GitHub Releases JSON → 这个兜底）
+// 只保留稳定 fallback 的硬编码兜底。其余模型（包括当前默认 Flash）全部
+// 由动态拉取提供，避免官方撤回或恢复模型时被旧硬编码表覆盖。
+// 来源顺序：官方源 → GitHub Release 快照 → 这个 fallback。
 const MODELS = [
   { id: "mimo/mimo-v2.5", session: "mimo/mimo-v2.5", agent: "base2-free-mimo", upstream: "mimo/mimo-v2.5" },
 ];
 
 // ---------------------------------------------------------------------------
-// 额度池说明（逆向自官方源码 freebuff-models.ts，2026-08-10 实证）
+// 额度池说明（逆向自官方源码 freebuff-models.ts，2026-08-23 快照）
 //
-// 官方三种额度池（都是 session 次数，非 token 数）：
-//   1. PREMIUM 池：共享 6 次/天（FREEBUFF_PREMIUM_SESSION_LIMIT=6）
-//      m3 / v4-pro / luna / laguna-s-2.1 / muse-spark / greg-2 等
-//      （FREEBUFF_WEB_PREMIUM_MODEL_IDS）
-//   2. STANDARD 池：浏览器/Web 端 6 次/天
-//      （FREEBUFF_WEB_STANDARD_SESSION_LIMIT=6；= 所有非 premium 模型，
-//      即 Flash / MiMo 2.5 等。FREEBUFF_WEB_STANDARD_MODEL_IDS）
-//      ⚠️ 注释原文："The CLI keeps these models UNLIMITED; browser surfaces
-//      cap fresh sessions to deter automated project/session churn."
-//      → CLI 协议 Flash 无限，但 CLI 已被官方封堵（free_mode_cli_required）；
-//        桌面版/Web 协议下 Flash 同样受 6 次/天限制
+// 官方额度池（都是 session/admission 次数，非 token 数）：
+//   1. PREMIUM 池：当前共享上限为 4/天；Flash、Pro、Luna 等共同消耗。
+//      Luna 另有每模型 2/天 cap，Pro 当前无单独 cap。
+//   2. STANDARD 池：MiMo 等非 premium 模型；“unlimited”只表示官方分类，
+//      不构成任何账号、地区或时段的绝对无限量承诺。
 //   3. GLM 5.2 池：独立，referral 解锁（不计入以上）
 //
 // 桌面版并发桶（FREEBUFF_DESKTOP_SESSION_LIMITS，仅限并发非额度）：
@@ -347,20 +394,32 @@ const MODELS = [
 //   limited 访问层（无 Premium 的号）：所有模型都占 1 个 slot
 //   （occupiesFreebuffDesktopSlot / getFreebuffDesktopSessionBucket）
 //
-// 对 1.7.0 的意义：单号串行时每天上限 = Premium 6 + Flash 6（07:00 UTC
-// 太平洋日重置）。并发到多号会同时烧各号额度，无法靠并发突破 6 次/天。
-// 额度池只用于选号，绝不改变调用方请求的模型。
+// 实际可用性仍以每个账号上游返回的 rateLimitsByModel/status 为准；额度池
+// 只用于选号和耗尽判断，绝不改变调用方请求的模型。
 // ---------------------------------------------------------------------------
 const PREMIUM_QUOTA_MODELS = new Set([
+  "deepseek/deepseek-v4-flash",
   "deepseek/deepseek-v4-pro",
   "openai/gpt-5.6-luna",
-  "minimax/minimax-m3",
+  "openai/gpt-5.6-luna-es",
+  "crof/kimi-k3-eco",
   "meta/muse-spark-1.2-contributor",
 ]);
 const STANDARD_MODELS = new Set([
-  "deepseek/deepseek-v4-flash",
   "mimo/mimo-v2.5",
+  "anthropic/claude-fable-5",
+  "stealth/ox-alpha",
 ]);
+
+// 官方暂停/不可用模型状态来自动态源；此函数只在动态源尚未成功读取时
+// 使用保守兜底。暂停模型不静默替换，避免客户端以为调用了原模型。
+function isPausedModel(modelId) {
+  const cache = dynamicModelsCache;
+  if (cache && cache.pausedKnown) return cache.paused.has(modelId);
+  return (cache?.paused && cache.paused.size > 0)
+    ? cache.paused.has(modelId)
+    : FALLBACK_PAUSED_MODEL_IDS.has(modelId);
+}
 
 // ---------------------------------------------------------------------------
 // 桌面版协议常量（逆向自 Freebuff Desktop orchestrator.js）
@@ -537,7 +596,8 @@ function pickToken(env, sessionModel) {
   const finalPool = usePool;
 
   // 优先复用已有活跃 session 缓存的号：一个 session 约 1 小时有效，创建 session 才扣
-  // 免费额度（如 v4-pro 每天 6 次）。纯轮询会让每个请求都切号、各建一个 session，
+  // 免费额度（Premium 共享池当前默认上限为 4 次/天，实际以上游快照为准）。
+  // 纯轮询会让每个请求都切号、各建一个 session，
   // 浪费创建额度。只要当前模型的 session 缓存还活跃就钉在同一个号上，用满再换。
   if (sessionModel) {
     for (const acct of finalPool) {
@@ -614,6 +674,25 @@ function hasExactErrorCode(value, expected) {
   return Object.values(value).some((entry) => hasExactErrorCode(entry, expected));
 }
 
+function upstreamErrorMessage(data, text = "") {
+  if (typeof data === "string") return data.slice(0, 200);
+  if (data && typeof data === "object") {
+    const direct = data.message || data.error_description || data.error;
+    if (typeof direct === "string") return direct.slice(0, 200);
+    if (direct && typeof direct === "object") {
+      const nested = direct.message || direct.code || direct.error;
+      if (typeof nested === "string") return nested.slice(0, 200);
+    }
+  }
+  return String(text || "").slice(0, 200);
+}
+
+function isModelUnavailableResponse(status, data, text = "", allowBare410 = false) {
+  return hasExactErrorCode(data, "model_unavailable")
+    || (typeof text === "string" && /\bmodel_unavailable\b/.test(text))
+    || (allowBare410 && status === 410);
+}
+
 function isStaleSessionGate(status, body) {
   let parsed = null;
   try { parsed = JSON.parse(body); } catch {}
@@ -623,21 +702,14 @@ function isStaleSessionGate(status, body) {
 
 // 仅供流式无首数据时确认 Premium 额度是否耗尽；不参与账号轮询排序。
 function remainingQuota(token, sessionModel) {
-  if (modelPoolCategory(sessionModel) === "standard") return null;
+  const poolCategory = modelPoolCategory(sessionModel);
+  if (poolCategory === "standard" || poolCategory === null) return null;
   const h = acctHealth.get(token);
   if (!h || !h.quota) return null;
-  let entry = h.quota[sessionModel];
-  if (!entry && modelPoolCategory(sessionModel) === "premium") {
-    const premiumPool = (dynamicModelsCache.pool && dynamicModelsCache.pool.premium)
-      ? dynamicModelsCache.pool.premium
-      : PREMIUM_QUOTA_MODELS;
-    for (const model of premiumPool) {
-      if (h.quota[model]) {
-        entry = h.quota[model];
-        break;
-      }
-    }
-  }
+  // Current upstream payloads can contain several Premium pools (for example
+  // Luna's per-model cap alongside the shared pool). Never borrow another
+  // model's row: a missing exact row means “unknown”, not “same quota”.
+  const entry = h.quota[sessionModel];
   if (!entry || typeof entry.recentCount !== "number" || typeof entry.limit !== "number") return null;
   return entry.limit - entry.recentCount;
 }
@@ -649,17 +721,12 @@ function isQuotaExhausted(info, sessionModel) {
   if (["rate_limited", "banned", "country_blocked", "token_invalid", "blocked", "model_locked", "ip_capped"].includes(info.state)) return true;
   // STANDARD 没有可靠的剩余次数查询；只处理明确的账号/上游状态，
   // 不根据 rateLimitsByModel 的 STANDARD 数字判断耗尽。
-  if (modelPoolCategory(sessionModel) === "standard") return false;
+  const poolCategory = modelPoolCategory(sessionModel);
+  if (poolCategory === "standard" || poolCategory === null) return false;
   if (!info.quota) return false;
-  let entry = info.quota[sessionModel];
-  if (!entry && modelPoolCategory(sessionModel) === "premium") {
-    const premiumPool = (dynamicModelsCache.pool && dynamicModelsCache.pool.premium)
-      ? dynamicModelsCache.pool.premium
-      : PREMIUM_QUOTA_MODELS;
-    for (const model of premiumPool) {
-      if (info.quota[model]) { entry = info.quota[model]; break; }
-    }
-  }
+  // Do not infer a model's remaining quota from another model's row. The
+  // official API now exposes independent pools/caps in rateLimitsByModel.
+  const entry = info.quota[sessionModel];
   if (!entry || typeof entry.recentCount !== "number" || typeof entry.limit !== "number") return false;
   return entry.limit - entry.recentCount <= 0;
 }
@@ -684,6 +751,16 @@ class QuotaExhaustedError extends Error {
     super("upstream account quota exhausted");
     this.name = "QuotaExhaustedError";
     this.retryAfterMs = info && typeof info.retryAfterMs === "number" ? info.retryAfterMs : null;
+  }
+}
+
+// 上游 410/model_unavailable 表示模型是全局暂停/下线状态，而不是当前账号
+// 的额度问题。此错误不能触发账号轮换，否则会对所有账号重复发送必败请求。
+class ModelUnavailableError extends Error {
+  constructor(modelId, upstreamMessage = "") {
+    super("model unavailable upstream: " + modelId + (upstreamMessage ? " — " + upstreamMessage : ""));
+    this.name = "ModelUnavailableError";
+    this.modelId = modelId;
   }
 }
 
@@ -949,6 +1026,9 @@ async function createSession(token, sessionModel, forceCreate = false) {
     uid: r.data?.uid || null,
     retryAfterMs: r.data?.retryAfterMs,
   });
+  if (isModelUnavailableResponse(r.status, r.data, r.text, true)) {
+    throw new ModelUnavailableError(sessionModel, upstreamErrorMessage(r.data, r.text));
+  }
   if (r.status === 200 && r.data?.status === "active" && r.data?.instanceId) {
     const s = normalizeSession(r.data, sessionModel);
     sessCache.set(token + ":" + sessionModel, s);
@@ -964,6 +1044,9 @@ async function createSession(token, sessionModel, forceCreate = false) {
         uid: q.data?.uid || null,
         retryAfterMs: q.data?.retryAfterMs,
       });
+      if (isModelUnavailableResponse(q.status, q.data, q.text)) {
+        throw new ModelUnavailableError(sessionModel, upstreamErrorMessage(q.data, q.text));
+      }
       if (q.status === 200 && q.data?.status === "active") {
         const s = normalizeSession({ ...q.data, instanceId: q.data.instanceId || inst }, sessionModel);
         sessCache.set(token + ":" + sessionModel, s);
@@ -1214,16 +1297,23 @@ function findModelConfig(modelId) {
 // 查找模型配置前确保动态注册表已加载。
 // 不能依赖 /v1/models 先被调用：Cloudflare 不保证两个请求落在同一 isolate。
 async function resolveModelConfig(modelId) {
+  const hardcodedHit = MODELS.find((model) => model.id === modelId) || null;
   let hit = findModelConfig(modelId);
-  if (hit) return hit;
+  const cacheStale = !dynamicModelsCache.models
+    || Date.now() - dynamicModelsCache.fetchedAt >= DYNAMIC_MODELS_REFRESH_MS;
+  // 内置 fallback 可以立即使用；动态模型以及保守暂停名单需要先刷新，
+  // 以免每个请求都被模型源网络延迟卡住。
+  if (hit && !cacheStale) return isPausedModel(modelId) ? null : hit;
+  if (hardcodedHit && !FALLBACK_PAUSED_MODEL_IDS.has(modelId)) return hardcodedHit;
   try {
     const dyn = await refreshDynamicModelsIfStale();
+    if (isPausedModel(modelId)) return null;
     if (dyn && dyn.models) {
       hit = dyn.models.find((m) => m.id === modelId) || null;
       if (hit) return hit;
     }
   } catch {}
-  return findModelConfig(modelId);
+  return isPausedModel(modelId) ? null : findModelConfig(modelId);
 }
 
 async function handleChat(request, env) {
@@ -1373,6 +1463,11 @@ async function executeCodeReview(env, chatParams, mc, isStream, mode) {
       if (!resp.ok) {
         const text = await resp.text();
         recordAccountObservation(token, resp.status, text);
+        let parsedErr = null;
+        try { parsedErr = JSON.parse(text); } catch {}
+        if (isModelUnavailableResponse(resp.status, parsedErr, text)) {
+          throw new ModelUnavailableError(mc.session, upstreamErrorMessage(parsedErr, text));
+        }
         lastErrMsg = "reviewer upstream error: " + text.slice(0, 300);
         cooldown(token, parseCooldown(text, resp.status));
         throw new Error(lastErrMsg);
@@ -1402,6 +1497,9 @@ async function executeCodeReview(env, chatParams, mc, isStream, mode) {
       await finalize();
       return mode === "responses" ? jsonResponse(result, 200) : jsonResponse(result, 200);
     } catch (e) {
+      if (e instanceof ModelUnavailableError) {
+        return jsonResponse({ error: { message: "Model not available upstream: " + e.modelId + "（官方已下线或暂停）", type: "unsupported_model" } }, 400);
+      }
       console.error("[code_review]", e);
       lastErrMsg = String(e.message || e);
       if (reviewerRunId) await finishRun(token, reviewerRunId, 1).catch(() => {});
@@ -1481,6 +1579,11 @@ async function executeChat(env, chatParams, mc, isStream, mode) {
         }
         errText = await resp.text();
         recordAccountObservation(token, resp.status, errText);
+        let parsedErr = null;
+        try { parsedErr = JSON.parse(errText); } catch {}
+        if (isModelUnavailableResponse(resp.status, parsedErr, errText)) {
+          throw new ModelUnavailableError(mc.session, upstreamErrorMessage(parsedErr, errText));
+        }
         // 428 waiting_room_required（无活跃 session）/ 409 session_superseded（被新 session 顶替）
         // 都说明缓存 instance 已失效 → 清缓存强制重建后重试一次；不是限流，不计冷却
         const staleSession =
@@ -1516,8 +1619,11 @@ async function executeChat(env, chatParams, mc, isStream, mode) {
       const agg = await streamToNonStream(resp.body, mc.upstream);
       return jsonResponse(agg, 200);
     } catch (e) {
-      console.error("[" + mode + "]", e);
       const msg = String(e.message || e);
+      if (e instanceof ModelUnavailableError) {
+        return jsonResponse({ error: { message: "Model not available upstream: " + e.modelId + "（官方已下线或暂停）", type: "unsupported_model" } }, 400);
+      }
+      console.error("[" + mode + "]", e);
       // 额度探测确认耗尽：清除当前模型 session，按上游 retryAfterMs 冷却后切号。
       if (e instanceof QuotaExhaustedError) {
         sessCache.delete(token + ":" + mc.session);
@@ -1543,12 +1649,22 @@ async function executeChat(env, chatParams, mc, isStream, mode) {
 // ---------------------------------------------------------------------------
 // Anthropic Messages API（本地适配，复用稳定的 executeChat 主链路）
 // ---------------------------------------------------------------------------
-function anthropicModelToOpenAI(model) {
-  const raw = String(model || DEFAULT_MODEL).trim();
+async function anthropicModelToOpenAI(model) {
+  const raw = String(model ?? "").trim();
+  if (!raw) return DEFAULT_MODEL;
+  if (isPausedModel(raw)) return raw;
   if (findModelConfig(raw)) return raw;
   const short = raw.replace(/^anthropic\//, "");
   const hit = MODELS.find((m) => m.id.toLowerCase().endsWith("/" + short.toLowerCase()));
-  return hit ? hit.id : DEFAULT_MODEL;
+  if (hit) return hit.id;
+  try { await refreshDynamicModelsIfStale(); } catch {}
+  if (isPausedModel(raw)) return raw;
+  const dynamicHit = dynamicModelsCache.models?.find((m) => m.id.toLowerCase() === raw.toLowerCase()
+    || m.id.toLowerCase().endsWith("/" + short.toLowerCase()));
+  if (dynamicHit) return dynamicHit.id;
+  // 保留显式模型名，让 resolveModelConfig 有机会刷新动态表；只有请求没有
+  // 提供模型时才使用默认模型，避免未知模型被静默改写成 Flash。
+  return raw || DEFAULT_MODEL;
 }
 
 function anthropicText(content) {
@@ -1653,8 +1769,8 @@ function estimateAnthropicTokens(value) {
 async function handleAnthropicCountTokens(request, env) {
   let body;
   try { body = await request.json(); } catch { return anthropicError("Invalid JSON", "invalid_request_error", 400); }
-  const openaiModel = anthropicModelToOpenAI(body.model);
-  const mc = findModelConfig(openaiModel);
+  const openaiModel = await anthropicModelToOpenAI(body.model);
+  const mc = await resolveModelConfig(openaiModel);
   if (!mc) return anthropicError("Model not available: " + (body.model || ""), "invalid_request_error", 400);
   const chat = anthropicToChat(body, mc);
   return jsonResponse({ input_tokens: Math.max(1, Math.ceil(estimateAnthropicTokens(chat.messages) / 4)) }, 200);
@@ -1708,8 +1824,8 @@ function anthropicStream(mc) {
 async function handleAnthropicMessages(request, env) {
   let body;
   try { body = await request.json(); } catch { return anthropicError("Invalid JSON", "invalid_request_error", 400); }
-  const openaiModel = anthropicModelToOpenAI(body.model);
-  const mc = findModelConfig(openaiModel);
+  const openaiModel = await anthropicModelToOpenAI(body.model);
+  const mc = await resolveModelConfig(openaiModel);
   if (!mc) return anthropicError("Model not available: " + (body.model || ""), "invalid_request_error", 400);
   const chat = anthropicToChat(body, mc);
   const response = await executeChat(env, chat, mc, !!chat.stream, "chat");
@@ -2114,6 +2230,7 @@ async function handleModels() {
       modelList = mergeModelTables(MODELS, dyn.models);
     }
   } catch {}
+  modelList = modelList.filter((m) => !isPausedModel(m.id));
   return jsonResponse({
     object: "list",
     data: modelList.map((m) => ({ id: m.id, object: "model", created: Math.floor(Date.now() / 1000), owned_by: "freebuff" })),

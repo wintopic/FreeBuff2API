@@ -8,7 +8,8 @@
 //   "generatedAt": "ISO 时间",
 //   "source": "CodebuffAI/freebuff main",
 //   "models": [{ id, session, agent, upstream }, ...],   // 动态模型表
-//   "pools": { "premium": [...], "glm": [...], "standard": [...] }
+//   "pools": { "premium": [...], "glm": [...], "standard": [...] },
+//   "paused": [...]                         // 官方暂停/下线模型
 // }
 //
 // 注意：本脚本是 GitHub Actions 用的独立解析器，
@@ -137,20 +138,44 @@ function parseModelPools(source, modelIdConstants) {
   return { premium: [...premium], glm: [...glm] };
 }
 
+// 解析官方 FREEBUFF_PAUSED_FREE_MODEL_IDS。保留 found 标记，避免把“官方明确
+// 为空”误当成“旧源码没有该常量”。
+function parsePausedModels(source, modelIdConstants) {
+  const listRe = /export\s+const\s+FREEBUFF_PAUSED_FREE_MODEL_IDS\b[^=]*=\s*\[([^\]]*)\]/;
+  const listMatch = listRe.exec(source || "");
+  if (!listMatch) return { found: false, ids: new Set() };
+  const ids = new Set();
+  const listBody = listMatch[1]
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+  const itemRe = /'([^']*)'|"([^"]*)"|([A-Za-z0-9_]+)/g;
+  let item;
+  while ((item = itemRe.exec(listBody)) !== null) {
+    const literal = item[1] ?? item[2];
+    const expression = item[3];
+    if (literal) ids.add(literal);
+    else if (expression && modelIdConstants[expression]) ids.add(modelIdConstants[expression]);
+  }
+  return { found: true, ids };
+}
+
 // ---- 拉取 ----
 
 async function fetchFirst(urls) {
   for (const url of urls) {
+    let timer = null;
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 10000);
+      timer = setTimeout(() => ctrl.abort(), 10000);
       const resp = await fetch(url, { signal: ctrl.signal });
-      clearTimeout(timer);
       if (resp.ok) {
         const text = await resp.text();
         if (text && text.length > 100) return text;
       }
-    } catch {}
+    } catch {
+    } finally {
+      if (timer !== null) clearTimeout(timer);
+    }
   }
   return null;
 }
@@ -179,6 +204,10 @@ async function main() {
       process.exit(1);
     }
     const pools = parseModelPools(modelsSrc, modelIdConstants);
+    const pausedInfo = parsePausedModels(modelsSrc, modelIdConstants);
+    if (pausedInfo.found && pausedInfo.ids.size > 0) {
+      console.log(`ℹ️  官方暂停模型（已从快照剔除）: ${[...pausedInfo.ids].join(", ")}`);
+    }
     const models = Object.entries(agentMappings.root).map(([modelId, rootAgent]) => ({
       id: modelId,
       session: modelId,
@@ -187,9 +216,11 @@ async function main() {
       base3_agent: agentMappings.base3[modelId] || null,
       reviewer_agent: agentMappings.reviewer[modelId] || null,
       upstream: modelId,
-    }));
+    })).filter((model) => !pausedInfo.ids.has(model.id));
     const premium = new Set(pools.premium);
+    for (const id of pausedInfo.ids) premium.delete(id);
     const glm = new Set(pools.glm);
+    for (const id of pausedInfo.ids) glm.delete(id);
     const standard = models
       .map((m) => m.id)
       .filter((id) => !premium.has(id) && !glm.has(id));
@@ -203,6 +234,9 @@ async function main() {
         standard,
       },
     };
+    // 旧官方源码没有暂停常量时不要写入空数组；运行时看到缺失字段后会
+    // 使用保守兜底，而不是把“未知”误当成“官方明确没有暂停模型”。
+    if (pausedInfo.found) payload.paused = [...pausedInfo.ids].sort();
     writeFileSync(outPath, JSON.stringify(payload, null, 2) + "\n");
     console.log(`✅ 生成 ${outPath}`);
     console.log(`   模型数: ${models.length}`);
@@ -225,6 +259,8 @@ async function main() {
       "anthropic/claude-fable-5":     "Claude Fable 5（Anthropic 限量模型）",
       "meta/muse-spark-1.2-contributor": "Muse Spark 1.2（Meta 开发者专属，限量）",
       "crof/kimi-k3-eco":            "Kimi K3 Eco（CROF 平衡型模型）",
+      "openai/gpt-5.6-luna-es":      "GPT-5.6 Luna ES（实验性 Premium 模型）",
+      "stealth/ox-alpha":             "Ox Alpha（实验性模型）",
     };
     const mdLines = [
       `# Freebuff 可用模型（${beijingTime} 北京时间）`,
@@ -241,6 +277,14 @@ async function main() {
     for (const sec of sections) {
       mdLines.push(`## ${sec.title}`, "");
       for (const id of sec.ids) {
+        const desc = knownNames[id] || id;
+        mdLines.push(`- \`${id}\` —— ${desc}`);
+      }
+      mdLines.push("");
+    }
+    if (pausedInfo.found && pausedInfo.ids.size > 0) {
+      mdLines.push("## 已暂停或下线模型", "", "> 以下模型仍可能出现在旧客户端缓存中，但当前不会出现在 `/v1/models`，也不应创建新 session。", "");
+      for (const id of [...pausedInfo.ids].sort()) {
         const desc = knownNames[id] || id;
         mdLines.push(`- \`${id}\` —— ${desc}`);
       }
