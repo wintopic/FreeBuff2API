@@ -1,6 +1,6 @@
 # 安全政策
 
-FreeBuff2API 会处理 API key、FreeBuff authToken、账号标识和运行日志。请把这些内容视为高敏感凭据。
+FreeBuff2API 会处理 API key、FreeBuff authToken、账号标识、可选代理密码和运行日志。请把这些内容视为高敏感凭据。
 
 ## 报告安全问题
 
@@ -18,6 +18,7 @@ FreeBuff2API 会处理 API key、FreeBuff authToken、账号标识和运行日�
 - 路径处理造成任意文件读取或覆盖
 - GitHub Actions 泄露 secrets
 - 多账号数据串号或跨账号 session 复用
+- 账号代理串号、代理密码回显或未鉴权管理接口
 
 以下情况通常不属于本项目安全漏洞。
 
@@ -31,8 +32,14 @@ FreeBuff2API 会处理 API key、FreeBuff authToken、账号标识和运行日�
 - 桌面使用时把 HOST 设为 127.0.0.1
 - 使用随机生成的 FREEBUFF_API_KEY
 - 让 credentials 与 .env 仅对运行账户可读
+- 账号独立代理保持默认关闭；确有需要时优先使用 Windows GUI 配置
+- 凭据更新使用原子替换并保留 `.bak`，不要把备份提交或上传
+- 可选管理 API 仅允许 localhost，并使用独立、随机、至少 24 字节的管理令牌
 - 局域网或公网部署时添加 TLS、来源限制和访问日志脱敏
 - 不要把 FREEBUFF_DEBUG 日志上传到公共服务
 - 定期检查 Git 历史和发布压缩包中是否出现凭据
+- 代理路由调试日志只能使用“已选择/未选择”等状态，不得输出 token 前缀、完整 URL 或密码
 
-如果 authToken 已经泄露，请立即在上游账号侧撤销或重新登录，仅从当前文件中删除并不能清除 Git 历史或第三方缓存。
+Cloudflare Worker 不运行本地账号代理或管理 API。不要移植 Node socket 代码到 Worker，也不要恢复未经鉴权、可返回邮箱或完整代理 URL 的 Web 面板。
+
+如果 authToken 或代理密码已经泄露，请立即在上游账号侧撤销/重新登录或更换代理密码。仅从当前文件中删除并不能清除 Git 历史、备份或第三方缓存。

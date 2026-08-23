@@ -37,6 +37,7 @@ FreeBuff2API 把 FreeBuff 的 session、agent-runs 和流式上游请求整理�
 - 🛑 **动态暂停模型保护**：同步官方 `FREEBUFF_PAUSED_FREE_MODEL_IDS`，自动隐藏暂停模型并识别 `410 model_unavailable`
 - 🔒 **额度语义同步**：Premium 当前共享上限按 4 次/天说明，Luna 单独 cap 等变化以官方快照和账号返回为准
 - 🔁 **多账号自动切换**：撞额度自动冷却并切换，逗号分隔即可
+- 🌐 **安全的账号独立出口**：本地 Node/Windows GUI 可按账号配置 HTTP、HTTPS、SOCKS5，默认关闭且不会回显密码
 - 💡 **优先复用活跃 session**：一个 session 约 1 小时有效，创建 session 才扣额度；只要当前模型的 session 还活跃就钉在同一账号上，用满再换，最大化额度利用率
 - 📢 **广告与 streak 流程兼容**：创建新 session 前，Worker 会按官方客户端流程请求广告，并调用 `GET /api/v1/freebuff/streak` 尝试签到；相关请求失败会静默跳过，不阻塞聊天
 - 🧩 **OpenAI 兼容**：`/v1/models`、`/v1/chat/completions`、`/v1/responses`（流式/非流式视接口支持情况而定）
@@ -58,7 +59,7 @@ OpenAI SDK / Anthropic SDK / 常见客户端
        FreeBuff / Codebuff 上游服务
 ```
 
-核心协议逻辑集中在 `worker.js`。`server.js` 使用 Node 原生 HTTP 服务把请求转换为标准 Web Request，再调用同一个 `fetch` 入口。因此 Node、本地 GUI、Docker 与 Cloudflare Worker 可以共享业务实现。
+核心协议逻辑集中在 `worker.js`。`server.js` 使用 Node 原生 HTTP 服务把请求转换为标准 Web Request，再调用同一个 `fetch` 入口。可选的 `local-proxy.js` 只在 Node 入口层注入账号代理，避免把 `net`/`tls` 依赖带进 Cloudflare Worker。因此 Node、本地 GUI、Docker 与 Cloudflare Worker 可以共享业务实现，同时保留不同运行时的安全边界。
 
 ## 📨 Anthropic Messages API 支持
 
@@ -140,7 +141,7 @@ Invoke-RestMethod http://127.0.0.1:8877/healthz
 
 ## Windows 图形启动器
 
-仓库包含可选的 WinForms 启动器源码，位于 [`launcher`](launcher)。它面向不想接触终端的 Windows 用户，提供一键启动/停止、浏览器登录、代理检测、复制接入信息和隐藏 Node 控制台等功能。新 Logo、窗口图标和任务栏图标也由启动器工程统一生成。
+仓库包含可选的 WinForms 启动器源码，位于 [`launcher`](launcher)。它面向不想接触终端的 Windows 用户，提供一键启动/停止、浏览器登录、代理检测、账号独立代理、复制接入信息和隐藏 Node 控制台等功能。新 Logo、窗口图标和任务栏图标也由启动器工程统一生成。
 
 启动器的运行数据保存在程序目录下的 `runtime`，其中 `.env`、`credentials` 和 `logs` 必须保持本地私有。仓库只应提交启动器源码与图标资源，不应提交 Node 二进制、发布目录或账号凭据。
 
@@ -174,12 +175,49 @@ HTTPS_PROXY=http://127.0.0.1:3067
 ALL_PROXY=http://127.0.0.1:3067
 NO_PROXY=127.0.0.1,localhost
 NODE_USE_ENV_PROXY=1
+FREE_PROXY_ACCOUNTS=0
 DOCKER_PROXY=http://host.docker.internal:3067
 ```
 
 `FREEBUFF_API_KEY` 是客户端访问本地网关的 key，`FREEBUFF_TOKEN` 是网关访问 FreeBuff 上游的账号凭据，两者不能互换。免费模型通常要求美国出口，代理端口能连通也不等于出口已经满足上游地区策略。
 
 服务默认监听 `127.0.0.1`。只有在确实需要局域网访问时才改为 `0.0.0.0`，并配合防火墙限制来源。
+
+### 全局本机代理与账号独立代理
+
+普通用户只需要配置 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`。这是全局本机代理，登录、动态模型源和所有账号请求统一走这一出口，也是桌面助手默认使用方式。
+
+账号独立代理是高级功能，仅支持本地 Node.js 和 Windows 桌面助手。它适合多个账号必须隔离出口的情况，默认关闭：
+
+1. 在桌面助手点击“账号独立代理…”；
+2. 打开启用开关，为需要独立出口的账号填写地址；
+3. 支持 `http://`、`https://`、`socks5://` 和 `socks5h://`，可包含用户名和密码；
+4. 留空的账号继续使用全局本机代理；保存后运行中的服务会自动重启。
+
+代理密码在输入框中默认隐藏，状态栏、健康检查、常规日志和错误消息只显示脱敏地址。账号代理写入本机凭据文件时采用临时文件、备份和原子替换；备份文件为 `freebuff_credentials.json.bak`。
+
+命令行高级用户也可以在账号对象中增加 `proxy` 字段，并设置 `FREE_PROXY_ACCOUNTS=1`：
+
+```json
+{
+  "accounts": {
+    "account-id": {
+      "authToken": "仅示意，不要提交真实 token",
+      "proxy": "socks5://user:password@127.0.0.1:1080"
+    }
+  }
+}
+```
+
+Cloudflare Worker 不支持本机 socket 和自定义代理出口，因此不会启用这套逻辑。仓库没有开放上游实验分支中的匿名 Web 面板。可选管理 API 默认关闭，只允许 `127.0.0.1` 监听，并要求至少 24 字节的独立管理令牌；桌面用户不需要开启它。
+
+如需开启管理 API，先生成一枚独立随机令牌（不要复用客户端 API key）：
+
+```powershell
+[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).TrimEnd('=').Replace('+','-').Replace('/','_')
+```
+
+然后在 `.env` 中设置 `FREEBUFF_MANAGEMENT_API=1` 和 `FREEBUFF_MANAGEMENT_TOKEN=...`，重启服务。接口为 `/_freebuff/accounts`，请求头是 `x-freebuff-management-token`；它只返回脱敏邮箱和代理，绝不会返回 authToken。桌面助手不依赖此接口。
 
 > 🌐 **自定义域名**：如果 `*.workers.dev` 域名访问不通（部分地区被墙/受限），可给 Worker 绑定自己的域名，Base URL 改为 `https://你的域名/v1`。配置方法见下方「[自定义域名](#-自定义域名)」。
 
@@ -189,7 +227,7 @@ DOCKER_PROXY=http://host.docker.internal:3067
 
 ```bash
 curl http://127.0.0.1:8877/healthz
-# {"status":"ok","version":"1.8.11","accounts":2,"time":"..."}
+# {"status":"ok","version":"1.9.0","accounts":2,"time":"..."}
 ```
 
 - `version` 用于确认正在运行的 Worker 逻辑版本
@@ -334,6 +372,9 @@ docker compose restart                        # 使用现有镜像重启
 | `FREEBUFF_DEBUG` | `true` 开启请求级调试日志 |
 | `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY` | 本地 Node.js 使用的上游出口代理；Compose 会改用 `DOCKER_PROXY` |
 | `NO_PROXY` | 不走代理的地址，通常为 `127.0.0.1,localhost` |
+| `FREE_PROXY_ACCOUNTS` | `1` 启用凭据文件中的账号独立代理；默认 `0`，仅本地 Node/GUI 支持 |
+| `FREEBUFF_MANAGEMENT_API` | 可选本机管理 API；默认 `0`，没有 Web 面板 |
+| `FREEBUFF_MANAGEMENT_TOKEN` | 管理 API 独立令牌，至少 24 字节；不能与客户端 API key 或 authToken 共用 |
 | `DOCKER_PROXY` | Compose 专用的宿主机代理地址，默认示例为 `http://host.docker.internal:3067` |
 | `WORKER_URL` | 可选；仅显式设置时在容器启动阶段拉取远程 `worker.js` |
 
@@ -588,6 +629,10 @@ Worker 已自动处理以上全部生命周期，无需手动干预。另：syst
 
 当前出口不符合上游地区要求。确认 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY` 和 `NO_PROXY`。代理端口检测通过只说明本机端口可连接，不能证明出口地区满足上游策略。
 
+### 账号独立代理连接失败
+
+先在桌面助手的“账号独立代理”窗口测试该账号代理。确认协议、端口、用户名和密码正确，并检查代理是否允许访问 `www.codebuff.com:443`。账号代理失败不会在日志里打印密码；需要重新输入时请直接覆盖保存。留空该账号代理即可恢复使用全局本机代理。
+
 ### 返回 `waiting_room_required` 或 `session_superseded`
 
 同一账号可能被多个客户端同时占用。停止其他 FreeBuff 客户端，等待旧 session 释放后重试。网关的串行队列和 session 缓存能减少竞争，但无法改变上游单账号约束。
@@ -605,6 +650,7 @@ Worker 已自动处理以上全部生命周期，无需手动干预。另：syst
 仓库对 `main` 和 Pull Request 自动运行以下检查：
 
 - Node.js 24 JavaScript 语法与模型状态回归测试
+- HTTP/HTTPS/SOCKS5 路由隔离、代理脱敏、超时清理与本机管理 API 鉴权测试
 - Docker Compose 配置校验与镜像构建
 - 全部 PowerShell 脚本解析
 - .NET 9 Windows 启动器 Release 构建
@@ -620,7 +666,7 @@ dotnet build launcher/FreeBuffLauncher.csproj -c Release
 
 ## 安全边界
 
-FreeBuff2API 会处理本地 API key 与 FreeBuff authToken。默认只监听 `127.0.0.1`，生产环境应使用随机 API key，并通过防火墙或反向代理限制来源。
+FreeBuff2API 会处理本地 API key、FreeBuff authToken 和可选代理密码。默认只监听 `127.0.0.1`，生产环境应使用随机 API key，并通过防火墙或反向代理限制来源。账号独立代理默认关闭；不要把管理 API 绑定到公网，也不要复用客户端 API key 作为管理令牌。
 
 不要把 `.env`、`credentials/`、`logs/`、`dist/`、Node 二进制或真实 token 提交到 Git。开启 `FREEBUFF_DEBUG` 前确认日志不会被共享。发现 token 泄露时，应立即撤销并重新登录。
 

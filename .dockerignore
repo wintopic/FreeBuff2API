@@ -6,6 +6,7 @@ credentials/
 wrangler.toml
 freebuff_tools/freebuff_credentials.json
 freebuff_tools/freebuff_credentials.example.json
+**/freebuff_credentials.json.*
 
 # 仓库元数据
 .git/

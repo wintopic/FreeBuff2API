@@ -40,6 +40,7 @@ internal sealed class MainForm : Form
     private ModernButton _copyAllButton = null!;
     private ModernButton _openFolderButton = null!;
     private ModernButton _saveProxyButton = null!;
+    private ModernButton _accountProxyButton = null!;
     private ModernButton _showKeyButton = null!;
     private InputBox _baseUrlBox = null!;
     private InputBox _apiKeyBox = null!;
@@ -84,7 +85,7 @@ internal sealed class MainForm : Form
     {
         Text = "FreeBuff 桌面助手";
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
-        ClientSize = new Size(820, 712);
+        ClientSize = new Size(820, 734);
         MinimumSize = MaximumSize = Size;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Background;
@@ -107,7 +108,7 @@ internal sealed class MainForm : Form
         header.Controls.Add(NewLabel("FreeBuff 桌面助手", 88, 18, 420, 32, 18F, FontStyle.Bold, TextMain));
         header.Controls.Add(NewLabel("本地 OpenAI 兼容接口 · 一键启动 · 安全登录", 89, 50, 520, 24, 9.5F, FontStyle.Regular, TextMuted));
         var versionPill = NewCard(712, 30, 76, 30, Color.FromArgb(239, 246, 255), Color.FromArgb(219, 234, 254), 15);
-        var versionText = NewLabel("v1.2", 0, 0, 76, 30, 9F, FontStyle.Bold, Primary);
+        var versionText = NewLabel("v1.9", 0, 0, 76, 30, 9F, FontStyle.Bold, Primary);
         versionText.TextAlign = ContentAlignment.MiddleCenter;
         versionPill.Controls.Add(versionText);
         header.Controls.Add(versionPill);
@@ -141,18 +142,20 @@ internal sealed class MainForm : Form
         _openFolderButton.Click += (_, _) => Process.Start(new ProcessStartInfo(_paths.RuntimeDirectory) { UseShellExecute = true });
         Controls.AddRange([_loginButton, _copyAllButton, _openFolderButton]);
 
-        var configCard = NewCard(24, 396, 772, 220);
+        var configCard = NewCard(24, 396, 772, 246);
         configCard.Controls.Add(NewLabel("连接配置", 20, 12, 100, 28, 10.5F, FontStyle.Bold, TextMain));
         configCard.Controls.Add(NewLabel("复制后可直接填入 OpenAI 兼容客户端", 112, 13, 360, 26, 8.5F, FontStyle.Regular, TextMuted));
 
         configCard.Controls.Add(NewLabel("Base URL", 20, 50, 80, 40, 9F, FontStyle.Regular, TextMuted));
         _baseUrlBox = NewTextBox(108, 50, 544, 40, true);
+        _baseUrlBox.SafeAccessibleName = "Base URL";
         var copyBaseButton = NewButton("复制", 662, 50, 88, 40, Card, Primary, 9F, FontStyle.Bold, Border);
         copyBaseButton.Click += (_, _) => CopyText(_settings.BaseUrl, "Base URL 已复制");
         configCard.Controls.AddRange([_baseUrlBox, copyBaseButton]);
 
         configCard.Controls.Add(NewLabel("API Key", 20, 102, 80, 40, 9F, FontStyle.Regular, TextMuted));
         _apiKeyBox = NewTextBox(108, 102, 444, 40, true);
+        _apiKeyBox.SafeAccessibleName = "API Key（内容已隐藏）";
         _apiKeyBox.UseSystemPasswordChar = true;
         _showKeyButton = NewButton("显示", 562, 102, 90, 40, Card, TextMain, 9F, FontStyle.Bold, Border);
         _showKeyButton.Click += (_, _) => ToggleApiKeyVisibility();
@@ -162,17 +165,24 @@ internal sealed class MainForm : Form
 
         configCard.Controls.Add(NewLabel("本机代理", 20, 154, 80, 40, 9F, FontStyle.Regular, TextMuted));
         _proxyBox = NewTextBox(108, 154, 544, 40, false);
+        _proxyBox.SafeAccessibleName = "本机代理地址（可选）";
         _saveProxyButton = NewButton("保存", 662, 154, 88, 40, Card, Primary, 9F, FontStyle.Bold, Border);
         _saveProxyButton.Click += async (_, _) => await SaveProxyAsync();
         configCard.Controls.AddRange([_proxyBox, _saveProxyButton]);
+
+        configCard.Controls.Add(NewLabel("高级设置", 20, 204, 80, 28, 9F, FontStyle.Regular, TextMuted));
+        _accountProxyButton = NewButton("账号独立代理…", 108, 202, 176, 34, Card, TextMain, 8.8F, FontStyle.Bold, Border);
+        _accountProxyButton.Click += async (_, _) => await OpenAccountProxySettingsAsync();
+        var proxyModeHint = NewLabel("默认关闭；普通用户保持统一使用上方本机代理即可", 298, 204, 440, 28, 8.5F, FontStyle.Regular, TextMuted);
+        configCard.Controls.AddRange([_accountProxyButton, proxyModeHint]);
         Controls.Add(configCard);
 
-        var messagePanel = NewCard(24, 632, 772, 44, Soft, Border, 10);
+        var messagePanel = NewCard(24, 658, 772, 44, Soft, Border, 10);
         _messageDot = NewLabel("●", 14, 9, 18, 26, 10F, FontStyle.Regular, TextMuted);
         _messageLabel = NewLabel("准备就绪。关闭本窗口不会停止已经运行的服务。", 38, 8, 710, 28, 9F, FontStyle.Regular, TextMuted);
         messagePanel.Controls.AddRange([_messageDot, _messageLabel]);
         Controls.Add(messagePanel);
-        Controls.Add(NewLabel("提示：真实聊天可能消耗 Freebuff session；本地凭据请勿分享。", 26, 684, 760, 20, 8.5F, FontStyle.Regular, TextMuted));
+        Controls.Add(NewLabel("提示：真实聊天可能消耗 Freebuff session；本地凭据请勿分享。", 26, 710, 760, 20, 8.5F, FontStyle.Regular, TextMuted));
     }
 
     private static Image LoadLogoImage()
@@ -309,6 +319,26 @@ internal sealed class MainForm : Form
         });
     }
 
+    private async Task OpenAccountProxySettingsAsync()
+    {
+        if (_busy) return;
+        using var dialog = new ProxySettingsForm(_settings, _credentialStore);
+        if (dialog.ShowDialog(this) != DialogResult.OK || !dialog.Saved) return;
+
+        await RunBusyAsync("正在应用账号代理设置…", async () =>
+        {
+            _settings.Save(_paths.EnvPath);
+            _serviceManager.UpdateSettings(_settings);
+            if ((await _serviceManager.GetHealthAsync()).Running)
+            {
+                await _serviceManager.RestartAsync();
+            }
+            SetMessage(_settings.PerAccountProxyEnabled
+                ? "账号独立代理已启用并保存。"
+                : "账号独立代理已关闭，所有账号使用本机代理。", Success);
+        });
+    }
+
     private void ApplyProxyFromTextBox()
     {
         var normalized = EnvSettings.NormalizeProxy(_proxyBox.Text);
@@ -368,8 +398,7 @@ internal sealed class MainForm : Form
             _proxyDot.ForeColor = proxyOk ? Success : Danger;
             _proxyStatus.Text = proxyOk ? "代理已连接" : "代理未连接";
             _proxyStatus.ForeColor = proxyOk ? Success : Danger;
-            _proxyDetail.Text = _settings.ProxyUrl.Replace("http://", string.Empty, StringComparison.OrdinalIgnoreCase)
-                .Replace("https://", string.Empty, StringComparison.OrdinalIgnoreCase);
+            _proxyDetail.Text = RedactProxy(_settings.ProxyUrl);
 
             _accountDot.ForeColor = accountCount > 0 ? Success : Danger;
             var accountExtra = _credentialStore.AccountDescription;
@@ -436,6 +465,7 @@ internal sealed class MainForm : Form
         _copyAllButton.Enabled = enabled;
         _openFolderButton.Enabled = enabled;
         _saveProxyButton.Enabled = enabled;
+        _accountProxyButton.Enabled = enabled;
         _proxyBox.Enabled = enabled;
     }
 
@@ -457,6 +487,15 @@ internal sealed class MainForm : Form
         var at = email.IndexOf('@');
         if (at <= 1) return email;
         return email[..Math.Min(2, at)] + "***" + email[at..];
+    }
+
+    private static string RedactProxy(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "直连";
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri)) return "代理地址已设置";
+        var host = uri.Host.Contains(':', StringComparison.Ordinal) ? $"[{uri.Host}]" : uri.Host;
+        var port = uri.Port > 0 && !uri.IsDefaultPort ? $":{uri.Port}" : string.Empty;
+        return $"{uri.Scheme}://{(string.IsNullOrWhiteSpace(uri.UserInfo) ? string.Empty : "***@")}{host}{port}";
     }
 
     private static RoundedPanel NewCard(

@@ -1,7 +1,7 @@
 const CODEBUFF_API = "https://www.codebuff.com";
 const DEFAULT_MODEL = "deepseek/deepseek-v4-flash";
 const DEFAULT_API_KEY = "freebuff-default-key";
-const VERSION = "1.8.11";
+const VERSION = "1.9.0";
 const CONTEXT_PRUNER_AGENT = "context-pruner";
 
 // 仅在官方动态源不可用或旧快照没有暂停字段时使用。成功解析官方源后，

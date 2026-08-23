@@ -209,6 +209,27 @@ internal sealed class InputBox : UserControl
         set => _textBox.UseSystemPasswordChar = value;
     }
 
+    /// <summary>
+    /// Sets a non-sensitive accessibility name for the composite control and
+    /// its child TextBox.  InputBox overrides Text for data binding, so the
+    /// default WinForms accessibility name would otherwise mirror the actual
+    /// value (for example an API key or proxy password).
+    /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public string SafeAccessibleName
+    {
+        get => AccessibleName ?? string.Empty;
+        set
+        {
+            AccessibleName = value ?? string.Empty;
+            if (_textBox is not null)
+            {
+                _textBox.AccessibleName = value ?? string.Empty;
+                _textBox.AccessibleDescription = "输入内容已隐藏";
+            }
+        }
+    }
+
     public InputBox()
     {
         SetStyle(ControlStyles.UserPaint |
@@ -226,7 +247,9 @@ internal sealed class InputBox : UserControl
             Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point),
             BackColor = BackColor,
             ForeColor = Color.FromArgb(30, 41, 59),
-            TabStop = true
+            TabStop = true,
+            AccessibleRole = AccessibleRole.Text,
+            AccessibleDescription = "输入内容已隐藏"
         };
         _textBox.GotFocus += (_, _) => { _focused = true; Invalidate(); };
         _textBox.LostFocus += (_, _) => { _focused = false; Invalidate(); };

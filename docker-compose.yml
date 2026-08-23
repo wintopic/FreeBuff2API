@@ -16,6 +16,8 @@ services:
       ALL_PROXY: "${DOCKER_PROXY:-}"
       NO_PROXY: "${NO_PROXY:-127.0.0.1,localhost}"
       NODE_USE_ENV_PROXY: "1"
+      FREE_PROXY_ACCOUNTS: "${FREE_PROXY_ACCOUNTS:-0}"
+      FREEBUFF_MANAGEMENT_API: "0"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

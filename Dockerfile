@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk add --no-cache wget
 
 # 预置当前版本作为本地兜底（启动时若拉取失败仍可运行）
-COPY package.json server.js worker.js ./
+COPY package.json server.js worker.js local-proxy.js management-api.js ./
 
 # 创建引导器。默认使用镜像内置 worker.js；只有显式设置
 # WORKER_URL 时才在启动时拉取远程版本，失败后仍使用内置副本。

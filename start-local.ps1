@@ -95,7 +95,7 @@ do {
         $health = Invoke-RestMethod -Uri "http://${listenHost}:$listenPort/healthz" -TimeoutSec 2
         if ($health.status) {
             Write-Host "freebuff2api started at http://${listenHost}:$listenPort (PID $($process.Id))."
-            Write-Host "Proxy: $proxyAddress"
+            Write-Host "Proxy: configured"
             Write-Host "Logs: $stdoutLog and $stderrLog"
             exit 0
         }

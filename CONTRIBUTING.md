@@ -57,5 +57,8 @@ dotnet publish launcher/FreeBuffLauncher.csproj -c Release -r win-x64 --self-con
 - healthz 和 models 不应创建上游 session
 - 多账号缓存键必须包含 token，避免跨账号复用
 - 新增上游请求时考虑串行队列、超时、取消和错误语义
+- Node 专用网络能力放在 `server.js` / `local-proxy.js` 边界，不得把 `net`、`tls` 等导入 `worker.js`
+- 代理相关改动必须覆盖 URL 校验、密码脱敏、账号隔离、失败释放和管理接口未授权测试
+- 不引入匿名账号面板；任何管理端点必须默认关闭、仅监听 localhost 并使用独立管理令牌
 
 提交代码即表示你同意按仓库的 AGPL-3.0 许可证提供贡献。
