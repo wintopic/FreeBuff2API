@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-08-26 21:05:34 北京时间）
+# Freebuff 可用模型（2026-08-27 03:56:15 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -28,4 +28,4 @@
 - `minimax/minimax-m3` —— MiniMax M3（综合能力强，中文优秀）
 
 ---
-共 10 个模型 · 上次更新：2026-08-26 21:05:34
+共 10 个模型 · 上次更新：2026-08-27 03:56:15
