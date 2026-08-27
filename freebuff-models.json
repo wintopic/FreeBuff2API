@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T19:56:15.146Z",
+  "generatedAt": "2026-08-27T08:50:24.216Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
@@ -21,15 +21,6 @@
       "upstream": "openai/gpt-5.6-luna"
     },
     {
-      "id": "deepseek/deepseek-v4-pro",
-      "session": "deepseek/deepseek-v4-pro",
-      "agent": "base2-free-deepseek",
-      "root_agent": "base2-free-deepseek",
-      "base3_agent": "base3-free-deepseek",
-      "reviewer_agent": "code-reviewer-deepseek",
-      "upstream": "deepseek/deepseek-v4-pro"
-    },
-    {
       "id": "deepseek/deepseek-v4-flash",
       "session": "deepseek/deepseek-v4-flash",
       "agent": "base2-free-deepseek-flash",
@@ -46,6 +37,15 @@
       "base3_agent": "base3-free-glm",
       "reviewer_agent": "code-reviewer-glm",
       "upstream": "z-ai/glm-5.2"
+    },
+    {
+      "id": "z-ai/glm-5.3-flash",
+      "session": "z-ai/glm-5.3-flash",
+      "agent": "base2-free-glm-5-3-flash",
+      "root_agent": "base2-free-glm-5-3-flash",
+      "base3_agent": "base3-free-glm-5-3-flash",
+      "reviewer_agent": "code-reviewer-glm-5-3-flash",
+      "upstream": "z-ai/glm-5.3-flash"
     },
     {
       "id": "crof/kimi-k3-eco",
@@ -82,21 +82,12 @@
       "base3_agent": "base3-free-muse-spark",
       "reviewer_agent": null,
       "upstream": "meta/muse-spark-1.2-contributor"
-    },
-    {
-      "id": "stealth/ox-alpha",
-      "session": "stealth/ox-alpha",
-      "agent": "base2-free-ox-alpha",
-      "root_agent": "base2-free-ox-alpha",
-      "base3_agent": "base3-free-ox-alpha",
-      "reviewer_agent": "code-reviewer-ox-alpha",
-      "upstream": "stealth/ox-alpha"
     }
   ],
   "pools": {
     "premium": [
       "openai/gpt-5.6-luna",
-      "deepseek/deepseek-v4-pro",
+      "z-ai/glm-5.3-flash",
       "crof/kimi-k3-eco",
       "openai/gpt-5.6-luna-es",
       "meta/muse-spark-1.2-contributor"
@@ -107,11 +98,12 @@
     "standard": [
       "mimo/mimo-v2.5",
       "deepseek/deepseek-v4-flash",
-      "anthropic/claude-fable-5",
-      "stealth/ox-alpha"
+      "anthropic/claude-fable-5"
     ]
   },
   "paused": [
-    "minimax/minimax-m3"
+    "deepseek/deepseek-v4-pro",
+    "minimax/minimax-m3",
+    "stealth/ox-alpha"
   ]
 }
