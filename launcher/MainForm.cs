@@ -108,7 +108,7 @@ internal sealed class MainForm : Form
         header.Controls.Add(NewLabel("FreeBuff 桌面助手", 88, 18, 420, 32, 18F, FontStyle.Bold, TextMain));
         header.Controls.Add(NewLabel("本地 OpenAI 兼容接口 · 一键启动 · 安全登录", 89, 50, 520, 24, 9.5F, FontStyle.Regular, TextMuted));
         var versionPill = NewCard(712, 30, 76, 30, Color.FromArgb(239, 246, 255), Color.FromArgb(219, 234, 254), 15);
-        var versionText = NewLabel("v1.9", 0, 0, 76, 30, 9F, FontStyle.Bold, Primary);
+        var versionText = NewLabel("v1.9.1", 0, 0, 76, 30, 9F, FontStyle.Bold, Primary);
         versionText.TextAlign = ContentAlignment.MiddleCenter;
         versionPill.Controls.Add(versionText);
         header.Controls.Add(versionPill);

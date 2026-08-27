@@ -1,8 +1,10 @@
 const CODEBUFF_API = "https://www.codebuff.com";
 const DEFAULT_MODEL = "deepseek/deepseek-v4-flash";
 const DEFAULT_API_KEY = "freebuff-default-key";
-const VERSION = "1.9.0";
+const VERSION = "1.9.1";
 const CONTEXT_PRUNER_AGENT = "context-pruner";
+const SDK_UA = "ai-sdk/openai-compatible/1.0.25/codebuff";
+const DESKTOP_UA = "Freebuff-CLI/0.0.138";
 
 // 仅在官方动态源不可用或旧快照没有暂停字段时使用。成功解析官方源后，
 // 该名单会被完整替换，避免把已经恢复的历史模型继续误判为暂停。
@@ -596,7 +598,7 @@ function pickToken(env, sessionModel) {
   const finalPool = usePool;
 
   // 优先复用已有活跃 session 缓存的号：一个 session 约 1 小时有效，创建 session 才扣
-  // 免费额度（Premium 共享池当前默认上限为 4 次/天，实际以上游快照为准）。
+  // 免费额度池和每模型限制随官方快照变化，实际以上游返回为准。
   // 纯轮询会让每个请求都切号、各建一个 session，
   // 浪费创建额度。只要当前模型的 session 缓存还活跃就钉在同一个号上，用满再换。
   if (sessionModel) {
@@ -809,8 +811,9 @@ const SESSION_TIMEOUT_MS = 10000;  // session/run 等短交互更快失败
 const STREAM_NO_DATA_PROBE_DELAY_MS = 20000;
 
 async function up(method, path, token, body, extraHeaders = {}, timeoutMs = UPSTREAM_TIMEOUT_MS) {
-  const headers = {};
-  // 桌面版协议：不手动设置 User-Agent（fetch 默认），只带必要的业务头
+  // 普通上游请求使用官方 SDK 标识；调用方仍可通过 extraHeaders 显式覆盖，
+  // 广告链因此可以继续使用 Freebuff-CLI 标识。
+  const headers = { "User-Agent": SDK_UA };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers["Content-Type"] = "application/json";
   Object.assign(headers, extraHeaders);
@@ -959,13 +962,13 @@ async function runNormalClientBehavior(token, clientFingerprint) {
         sessionId: crypto.randomUUID(),
         surface: "waiting_room",
         device: { os: "macos", timezone: "Asia/Shanghai", locale: "zh-CN" },
-        userAgent: "Freebuff-CLI/0.0.138",
-      }, { "User-Agent": "Freebuff-CLI/0.0.138", "Content-Type": "application/json" }, 6000);
+        userAgent: DESKTOP_UA,
+      }, { "User-Agent": DESKTOP_UA, "Content-Type": "application/json" }, 6000);
       const impUrl = ad.data && Array.isArray(ad.data.ads) && ad.data.ads[0] && ad.data.ads[0].impUrl;
       if (ad.status === 200 && impUrl) {
         await enqueueUp("POST", "/api/v1/ads/impression", token,
           { impUrl, mode: "free" },
-          { "User-Agent": "Freebuff-CLI/0.0.138", "Content-Type": "application/json" }, 6000);
+          { "User-Agent": DESKTOP_UA, "Content-Type": "application/json" }, 6000);
       }
     } catch (e) { failures.push("ads:" + String(e && e.message || e).slice(0, 80)); }
   }
@@ -1452,6 +1455,7 @@ async function executeCodeReview(env, chatParams, mc, isStream, mode) {
       const headers = {
         Authorization: "Bearer " + token,
         "Content-Type": "application/json",
+        "User-Agent": SDK_UA,
         "x-freebuff-instance-id": sess.instanceId,
       };
       const resp = await fetch(CODEBUFF_API + "/api/v1/chat/completions", {
@@ -1543,6 +1547,7 @@ async function executeChat(env, chatParams, mc, isStream, mode) {
         const headers = {
           Authorization: "Bearer " + token,
           "Content-Type": "application/json",
+          "User-Agent": SDK_UA,
           "x-freebuff-instance-id": sessForChat.instanceId,
         };
         // x-freebuff-acting-user-id：⚠️ 实测（2026-08-10）不带它 chat 才能过（200），
@@ -1886,6 +1891,7 @@ async function streamToNonStream(upstreamBody, upstreamModel) {
   const reader = upstreamBody.getReader();
   const decoder = new TextDecoder();
   let buf = "", content = "", reasoning = "", finishReason = null, model = "", id = "", usage = null;
+  const toolCalls = new Map(); // 上游 tool_calls index -> {id, name, arguments}
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -1903,6 +1909,21 @@ async function streamToNonStream(upstreamBody, upstreamModel) {
         const delta = choice.delta || {};
         if (delta.content) content += delta.content;
         if (delta.reasoning_content) reasoning += delta.reasoning_content;
+        if (Array.isArray(delta.tool_calls)) {
+          for (const tc of delta.tool_calls) {
+            if (!tc || typeof tc !== "object") continue;
+            const toolIndex = tc.index ?? 0;
+            let item = toolCalls.get(toolIndex);
+            if (!item) {
+              item = { id: "", name: "", arguments: "" };
+              toolCalls.set(toolIndex, item);
+            }
+            if (tc.id) item.id = tc.id;
+            const fn = tc.function || {};
+            if (fn.name && !item.name) item.name = fn.name;
+            if (fn.arguments) item.arguments += fn.arguments;
+          }
+        }
         if (choice.finish_reason) finishReason = choice.finish_reason;
         if (obj.id) id = obj.id;
         if (obj.model) model = obj.model;
@@ -1911,6 +1932,15 @@ async function streamToNonStream(upstreamBody, upstreamModel) {
     }
   }
   const msg = { role: "assistant", content };
+  if (toolCalls.size) {
+    msg.tool_calls = [...toolCalls.entries()]
+      .sort((left, right) => left[0] - right[0])
+      .map(([, item]) => ({
+        id: item.id || ("call_" + Math.random().toString(36).slice(2, 10)),
+        type: "function",
+        function: { name: item.name, arguments: item.arguments },
+      }));
+  }
   if (reasoning && !content) { msg.content = reasoning; msg.reasoning_used_as_content = true; }
   else if (reasoning) msg.reasoning_content = reasoning;
   return {

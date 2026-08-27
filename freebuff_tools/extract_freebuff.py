@@ -46,6 +46,7 @@ CRED_FILE = Path(__file__).resolve().parent / "freebuff_credentials.json"
 POLL_INTERVAL = 5          # 秒，官方 CLI 用 5s
 POLL_TIMEOUT = 5 * 60      # 秒，官方 5 分钟
 REQUEST_TIMEOUT = 30
+SDK_UA = "ai-sdk/openai-compatible/1.0.25/codebuff"
 
 MODEL_DEFAULT = "deepseek/deepseek-v4-flash"
 
@@ -108,8 +109,7 @@ def _http(method: str, path: str, body=None, headers=None, query=None, timeout=R
         url += "?" + urllib.parse.urlencode(query)
     data = None
     hdrs = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+        "User-Agent": SDK_UA,
         "Accept": "application/json",
     }
     if body is not None:
@@ -404,8 +404,7 @@ def cmd_chat(args):
     # 1) 先确保有 active session（官方门控：无 session → 428 waiting_room_required）
     model = args.model or MODEL_DEFAULT
     # 官方 SDK UA（free 模式识别依赖，浏览器 UA 会被拒）
-    sdk_ua = "ai-sdk/openai-compatible/0.0.141/codebuff"
-    headers = {"Authorization": f"Bearer {tok}", "User-Agent": sdk_ua}
+    headers = {"Authorization": f"Bearer {tok}", "User-Agent": SDK_UA}
     status, sess, _ = _http("POST", "/api/v1/freebuff/session",
                             headers={**headers, "x-freebuff-model": model})
     print(f"📡 POST /session → HTTP {status}")
@@ -439,7 +438,7 @@ def cmd_chat(args):
     chat_headers = {
         "Authorization": f"Bearer {tok}",
         "Content-Type": "application/json",
-        "User-Agent": sdk_ua,
+        "User-Agent": SDK_UA,
     }
     if instance_id:
         chat_headers["x-freebuff-instance-id"] = instance_id

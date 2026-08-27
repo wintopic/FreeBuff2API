@@ -10,8 +10,8 @@
     <AssemblyTitle>FreeBuff 桌面助手</AssemblyTitle>
     <Product>FreeBuff 桌面助手</Product>
     <Description>FreeBuff2API 本地一键启动、停止与登录管理工具</Description>
-    <Version>1.9.0</Version>
-    <FileVersion>1.9.0.0</FileVersion>
+    <Version>1.9.1</Version>
+    <FileVersion>1.9.1.0</FileVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>assets\app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>

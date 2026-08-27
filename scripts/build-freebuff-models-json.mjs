@@ -260,6 +260,7 @@ async function main() {
       "meta/muse-spark-1.2-contributor": "Muse Spark 1.2（Meta 开发者专属，限量）",
       "crof/kimi-k3-eco":            "Kimi K3 Eco（CROF 平衡型模型）",
       "openai/gpt-5.6-luna-es":      "GPT-5.6 Luna ES（实验性 Premium 模型）",
+      "z-ai/glm-5.3-flash":          "GLM 5.3 Flash（智谱 AI 高速模型）",
       "stealth/ox-alpha":             "Ox Alpha（实验性模型）",
     };
     const mdLines = [

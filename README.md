@@ -35,12 +35,13 @@ FreeBuff2API 把 FreeBuff 的 session、agent-runs 和流式上游请求整理�
 
 - ⭐ **动态模型映射**：定期解析 FreeBuff 公共源码，并用仓库快照和内置表兜底
 - 🛑 **动态暂停模型保护**：同步官方 `FREEBUFF_PAUSED_FREE_MODEL_IDS`，自动隐藏暂停模型并识别 `410 model_unavailable`
-- 🔒 **额度语义同步**：Premium 当前共享上限按 4 次/天说明，Luna 单独 cap 等变化以官方快照和账号返回为准
+- 🔒 **额度语义同步**：Premium/Standard/GLM 池分类来自官方动态快照，具体上限和资格以账号返回为准
 - 🔁 **多账号自动切换**：撞额度自动冷却并切换，逗号分隔即可
 - 🌐 **安全的账号独立出口**：本地 Node/Windows GUI 可按账号配置 HTTP、HTTPS、SOCKS5，默认关闭且不会回显密码
 - 💡 **优先复用活跃 session**：一个 session 约 1 小时有效，创建 session 才扣额度；只要当前模型的 session 还活跃就钉在同一账号上，用满再换，最大化额度利用率
 - 📢 **广告与 streak 流程兼容**：创建新 session 前，Worker 会按官方客户端流程请求广告，并调用 `GET /api/v1/freebuff/streak` 尝试签到；相关请求失败会静默跳过，不阻塞聊天
 - 🧩 **OpenAI 兼容**：`/v1/models`、`/v1/chat/completions`、`/v1/responses`（流式/非流式视接口支持情况而定）
+- 🛠️ **工具调用兼容**：非流式 Chat Completions 会按 `index` 聚合上游 `delta.tool_calls`，保留完整函数名与参数
 - 📨 **Anthropic Messages API**：支持 `/v1/messages`、`/messages` 及对应的 `count_tokens` 路由，可供 Anthropic SDK / 兼容客户端尝试接入
 - ❤️ **健康检查**：`GET /healthz`（免鉴权），方便监控探活
 - 📦 **核心协议单文件**：业务逻辑集中在 `worker.js`，Node、Docker、GUI 与 Cloudflare Worker 共用
@@ -86,12 +87,12 @@ OpenAI SDK / Anthropic SDK / 常见客户端
 
 | 模型 | 完整模式下的说明 |
 |---|---|
-| `deepseek/deepseek-v4-flash` | 当前 Premium；主力推荐模型 |
+| `deepseek/deepseek-v4-flash` | 当前 Standard；主力推荐模型 |
 | `mimo/mimo-v2.5` | 当前标准/fallback 模型；均衡性能 |
 
 > ⚠️ 账号资格、地区、时段和上游动态策略可能改变最终可用性。实际额度以上游返回为准。
 
-官方当前 Premium 共享 session 上限为 4 次/天；Luna 另有每模型 2 次/天 cap。MiMo 等非 Premium 模型不应被宣传为绝对无限。`referral`、`streak`、独立共享池和上游临时限制属于额外条件，不能据此宣传为无限量。
+模型池和可用性会随官方快照变化；MiMo、Flash 等 Standard 模型也不应被宣传为绝对无限。`referral`、`streak`、独立共享池和上游临时限制属于额外条件，不能据此宣传为无限量。
 
 > 💡 **关于额度**：额度通常按「创建 session」计算。活跃 session 内的多轮对话可以复用同一 session，实际规则以账号和上游返回为准。
 >
@@ -227,7 +228,7 @@ Cloudflare Worker 不支持本机 socket 和自定义代理出口，因此不会
 
 ```bash
 curl http://127.0.0.1:8877/healthz
-# {"status":"ok","version":"1.9.0","accounts":2,"time":"..."}
+# {"status":"ok","version":"1.9.1","accounts":2,"time":"..."}
 ```
 
 - `version` 用于确认正在运行的 Worker 逻辑版本
@@ -498,7 +499,7 @@ curl http://127.0.0.1:8877/v1/messages \
 
 ## 模型与额度
 
-> 映射来源：Freebuff Desktop 0.0.51（`orchestrator.js` 官方 `FREEBUFF_ROOT_AGENT_ID_BY_MODEL`，2026-08-07 实测同步）。
+> 映射来源：Freebuff 公共源码中的 `FREEBUFF_ROOT_AGENT_ID_BY_MODEL`（动态快照，定期同步）。
 > 模型分类来自 FreeBuff 公共源码与自动快照。实际访问模式由出口、账号资格和上游策略共同决定；额度通常在创建 session 时扣减。
 
 ### ⭐ 完整模式特殊模型：以官方当前分类为准
@@ -508,22 +509,22 @@ curl http://127.0.0.1:8877/v1/messages \
 | API 模型名 | session 模型 | 上游 agentId | 说明 |
 |---|---|---|---|
 | `mimo/mimo-v2.5` | 同左 | `base2-free-mimo` | 标准/fallback 模型；均衡性能 |
-| `deepseek/deepseek-v4-flash` | 同左 | `base2-free-deepseek-flash` | 当前 Premium；主力推荐 |
+| `deepseek/deepseek-v4-flash` | 同左 | `base2-free-deepseek-flash` | 当前 Standard；主力推荐 |
 
 > ⚠️ 账号资格、地区、时段和上游动态策略可能改变最终可用性。实际额度仍以上游返回为准。
 
 ### 🔒 Premium 与标准额度
 
-官方当前 Premium 共享 session 上限为 4 次/天；Luna 另有每模型 2 次/天 cap，DeepSeek V4 Pro 当前没有旧版本中的单模型 cap。MiMo 等非 Premium 模型不应被宣传为绝对无限。所有数字仅用于解释官方规则，实际可用性以账号返回的 `rateLimitsByModel`、`status` 和 HTTP 错误为准。
+模型池分类和限额会随官方版本变化，当前快照将 DeepSeek V4 Flash 归入 Standard，并将 GLM 5.3 Flash 纳入 Premium。所有数字仅用于解释官方规则，实际可用性以账号返回的 `rateLimitsByModel`、`status` 和 HTTP 错误为准。
 
 | API 模型名 | session 模型 | 上游 agentId |
 |---|---|---|
-| `deepseek/deepseek-v4-flash` | 同左 | `base2-free-deepseek-flash` |
 | `deepseek/deepseek-v4-pro` | 同左 | `base2-free-deepseek` |
 | `openai/gpt-5.6-luna` | 同左 | `base2-free-luna` |
 | `openai/gpt-5.6-luna-es` | 同左 | `base2-free-luna-es` |
 | `crof/kimi-k3-eco` | 同左 | `base2-free-kimi-k3-eco` |
 | `meta/muse-spark-1.2-contributor` | 同左 | `base2-free-muse-spark` |
+| `z-ai/glm-5.3-flash` | 同左 | `base2-free-glm-5-3-flash` |
 
 ### 🎁 独立资格或容量限制
 
@@ -533,11 +534,11 @@ curl http://127.0.0.1:8877/v1/messages \
 |---|---|---|---|
 | `z-ai/glm-5.2` | 同左 | `base2-free-glm` | 需 referral / streak 等官方资格，使用独立额度池 |
 | `anthropic/claude-fable-5` | 同左 | `base2-free-fable` | 官方容量限制试用，可能按时段开放 |
-| `stealth/ox-alpha` | 同左 | `base2-free-ox-alpha` | 实验性/服务资格限制，实际以官方返回为准 |
+| `stealth/ox-alpha` | 同左 | `base2-free-ox-alpha` | 实验性/服务资格限制，当前暂停 |
 
 ### 🛑 已暂停或下线模型
 
-模型暂停不是账号额度耗尽。Worker 会从动态快照读取官方暂停列表，将其从 `/v1/models` 隐藏；旧客户端仍请求暂停模型时返回 `unsupported_model`。截至本次快照，`minimax/minimax-m3` 处于暂停状态，DeepSeek V4 Flash 已恢复并按 Premium 处理。收到上游 `410 model_unavailable` 时，网关会立即返回，不会无意义地轮换其他账号。
+模型暂停不是账号额度耗尽。Worker 会从动态快照读取官方暂停列表，将其从 `/v1/models` 隐藏；旧客户端仍请求暂停模型时返回 `unsupported_model`。截至本次快照，`deepseek/deepseek-v4-pro`、`minimax/minimax-m3` 和 `stealth/ox-alpha` 处于暂停状态，DeepSeek V4 Flash 已恢复并按 Standard 处理。收到上游 `410 model_unavailable` 时，网关会立即返回，不会无意义地轮换其他账号。
 
 ## 👥 多账号
 
