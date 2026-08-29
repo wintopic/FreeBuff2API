@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-08-29 14:48:21 北京时间）
+# Freebuff 可用模型（2026-08-30 00:36:21 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -9,13 +9,13 @@
 - `openai/gpt-5.6-luna` —— GPT-5.6 Luna（OpenAI 最新，推理顶尖）
 - `openai/gpt-5.6-luna-es` —— GPT-5.6 Luna ES（实验性 Premium 模型）
 - `upstage/solar-pro4` —— upstage/solar-pro4
-- `z-ai/glm-5.3-flash` —— GLM 5.3 Flash（智谱 AI 高速模型）
 
 ## 标准（STANDARD）模型
 
 - `anthropic/claude-fable-5` —— Claude Fable 5（Anthropic 限量模型）
 - `deepseek/deepseek-v4-flash` —— DeepSeek V4 Flash（推理模型，代码/数学/推理优秀）
 - `mimo/mimo-v2.5` —— MiMo V2.5（轻量高效，适合快速任务）
+- `z-ai/glm-5.3-flash` —— GLM 5.3 Flash（智谱 AI 高速模型）
 
 ## 独立池（GLM 推荐解锁）
 
@@ -30,4 +30,4 @@
 - `stealth/ox-alpha` —— Ox Alpha（实验性模型）
 
 ---
-共 10 个模型 · 上次更新：2026-08-29 14:48:21
+共 10 个模型 · 上次更新：2026-08-30 00:36:21
