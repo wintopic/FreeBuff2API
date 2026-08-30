@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-08-30 04:49:18 北京时间）
+# Freebuff 可用模型（2026-08-30 13:01:25 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -30,4 +30,4 @@
 - `stealth/ox-alpha` —— Ox Alpha（实验性模型）
 
 ---
-共 10 个模型 · 上次更新：2026-08-30 04:49:18
+共 10 个模型 · 上次更新：2026-08-30 13:01:25
