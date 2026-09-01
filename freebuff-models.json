@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T11:30:02.101Z",
+  "generatedAt": "2026-09-01T16:27:29.094Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
@@ -37,15 +37,6 @@
       "base3_agent": "base3-free-deepseek-flash",
       "reviewer_agent": "code-reviewer-deepseek-flash",
       "upstream": "deepseek/deepseek-v4-flash"
-    },
-    {
-      "id": "z-ai/glm-5.2",
-      "session": "z-ai/glm-5.2",
-      "agent": "base2-free-glm",
-      "root_agent": "base2-free-glm",
-      "base3_agent": "base3-free-glm",
-      "reviewer_agent": "code-reviewer-glm",
-      "upstream": "z-ai/glm-5.2"
     },
     {
       "id": "z-ai/glm-5.3-flash",
@@ -101,9 +92,7 @@
       "openai/gpt-5.6-luna-es",
       "meta/muse-spark-1.2-contributor"
     ],
-    "glm": [
-      "z-ai/glm-5.2"
-    ],
+    "glm": [],
     "standard": [
       "mimo/mimo-v2.5",
       "deepseek/deepseek-v4-flash",
@@ -114,6 +103,7 @@
   "paused": [
     "deepseek/deepseek-v4-pro",
     "minimax/minimax-m3",
-    "stealth/ox-alpha"
+    "stealth/ox-alpha",
+    "z-ai/glm-5.2"
   ]
 }

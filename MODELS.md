@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-09-01 19:30:02 北京时间）
+# Freebuff 可用模型（2026-09-02 00:27:29 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -19,7 +19,6 @@
 
 ## 独立池（GLM 推荐解锁）
 
-- `z-ai/glm-5.2` —— GLM 5.2（智谱 AI，推荐解锁后使用）
 
 ## 已暂停或下线模型
 
@@ -28,6 +27,7 @@
 - `deepseek/deepseek-v4-pro` —— DeepSeek V4 Pro（最强推理模型）
 - `minimax/minimax-m3` —— MiniMax M3（综合能力强，中文优秀）
 - `stealth/ox-alpha` —— Ox Alpha（实验性模型）
+- `z-ai/glm-5.2` —— GLM 5.2（智谱 AI，推荐解锁后使用）
 
 ---
-共 10 个模型 · 上次更新：2026-09-01 19:30:02
+共 9 个模型 · 上次更新：2026-09-02 00:27:29
