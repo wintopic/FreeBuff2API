@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-09-03 04:54:25 北京时间）
+# Freebuff 可用模型（2026-09-03 12:04:01 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -6,6 +6,7 @@
 
 - `crof/kimi-k3-eco` —— Kimi K3 Eco（CROF 平衡型模型）
 - `meta/muse-spark-1.2-contributor` —— Muse Spark 1.2（Meta 开发者专属，限量）
+- `meta/muse-spark-1.3-contributor` —— meta/muse-spark-1.3-contributor
 - `openai/gpt-5.6-luna` —— GPT-5.6 Luna（OpenAI 最新，推理顶尖）
 - `openai/gpt-5.6-luna-es` —— GPT-5.6 Luna ES（实验性 Premium 模型）
 - `upstage/solar-pro4` —— upstage/solar-pro4
@@ -30,4 +31,4 @@
 - `z-ai/glm-5.2` —— GLM 5.2（智谱 AI，推荐解锁后使用）
 
 ---
-共 9 个模型 · 上次更新：2026-09-03 04:54:25
+共 10 个模型 · 上次更新：2026-09-03 12:04:01
