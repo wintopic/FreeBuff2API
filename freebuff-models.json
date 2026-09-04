@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T20:52:54.387Z",
+  "generatedAt": "2026-09-04T04:08:28.150Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
@@ -19,15 +19,6 @@
       "base3_agent": "base3-free-luna",
       "reviewer_agent": "code-reviewer-luna",
       "upstream": "openai/gpt-5.6-luna"
-    },
-    {
-      "id": "upstage/solar-pro4",
-      "session": "upstage/solar-pro4",
-      "agent": "base2-free-solar-pro4",
-      "root_agent": "base2-free-solar-pro4",
-      "base3_agent": "base3-free-solar-pro4",
-      "reviewer_agent": "code-reviewer-solar-pro4",
-      "upstream": "upstage/solar-pro4"
     },
     {
       "id": "deepseek/deepseek-v4-flash",
@@ -94,24 +85,23 @@
     }
   ],
   "pools": {
-    "premium": [
-      "openai/gpt-5.6-luna",
-      "upstage/solar-pro4",
-      "crof/kimi-k3-eco",
-      "openai/gpt-5.6-luna-es",
-      "meta/muse-spark-1.3-contributor",
-      "meta/muse-spark-1.2-contributor"
-    ],
+    "premium": [],
     "glm": [],
     "standard": [
       "mimo/mimo-v2.5",
+      "openai/gpt-5.6-luna",
       "deepseek/deepseek-v4-flash",
       "z-ai/glm-5.3-flash",
-      "anthropic/claude-fable-5"
+      "crof/kimi-k3-eco",
+      "openai/gpt-5.6-luna-es",
+      "anthropic/claude-fable-5",
+      "meta/muse-spark-1.2-contributor",
+      "meta/muse-spark-1.3-contributor"
     ]
   },
   "paused": [
     "deepseek/deepseek-v4-pro",
+    "google/gemini-3.8-flash",
     "minimax/minimax-m3",
     "stealth/ox-alpha",
     "z-ai/glm-5.2"
