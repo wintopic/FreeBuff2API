@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-09-25 00:58:25 北京时间）
+# Freebuff 可用模型（2026-09-25 05:24:27 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -29,7 +29,6 @@
 - `openai/gpt-5.4-pro` —— openai/gpt-5.4-pro
 - `openai/gpt-5.5` —— openai/gpt-5.5
 - `openai/gpt-5.5-pro` —— openai/gpt-5.5-pro
-- `openai/gpt-5.6-luna` —— GPT-5.6 Luna（OpenAI 最新，推理顶尖）
 - `openai/gpt-5.6-luna-es` —— GPT-5.6 Luna ES（实验性 Premium 模型）
 - `openai/gpt-5.6-luna-pro` —— openai/gpt-5.6-luna-pro
 - `openai/gpt-5.6-sol` —— openai/gpt-5.6-sol
@@ -72,8 +71,9 @@
 - `deepseek/deepseek-v4-pro` —— DeepSeek V4 Pro（最强推理模型）
 - `meta/muse-spark-1.3-contributor` —— meta/muse-spark-1.3-contributor
 - `minimax/minimax-m3` —— MiniMax M3（综合能力强，中文优秀）
+- `openai/gpt-5.6-luna` —— GPT-5.6 Luna（OpenAI 最新，推理顶尖）
 - `stealth/ox-alpha` —— Ox Alpha（实验性模型）
 - `z-ai/glm-5.2` —— GLM 5.2（智谱 AI，推荐解锁后使用）
 
 ---
-共 54 个模型 · 上次更新：2026-09-25 00:58:25
+共 53 个模型 · 上次更新：2026-09-25 05:24:27
