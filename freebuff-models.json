@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-23T21:23:30.361Z",
+  "generatedAt": "2026-09-24T04:23:29.746Z",
   "source": "CodebuffAI/freebuff main",
   "models": [
     {
@@ -102,33 +102,6 @@
       "upstream": "google/gemini-3.8-flash"
     },
     {
-      "id": "deepseek/deepseek-v4-pro-max",
-      "session": "deepseek/deepseek-v4-pro-max",
-      "agent": "base2-free-deepseek-pro-max",
-      "root_agent": "base2-free-deepseek-pro-max",
-      "base3_agent": null,
-      "reviewer_agent": null,
-      "upstream": "deepseek/deepseek-v4-pro-max"
-    },
-    {
-      "id": "deepseek/deepseek-v4-flash-max",
-      "session": "deepseek/deepseek-v4-flash-max",
-      "agent": "base2-free-deepseek-flash-max",
-      "root_agent": "base2-free-deepseek-flash-max",
-      "base3_agent": null,
-      "reviewer_agent": null,
-      "upstream": "deepseek/deepseek-v4-flash-max"
-    },
-    {
-      "id": "openai/gpt-5.6-luna-max",
-      "session": "openai/gpt-5.6-luna-max",
-      "agent": "base2-free-luna-max",
-      "root_agent": "base2-free-luna-max",
-      "base3_agent": null,
-      "reviewer_agent": null,
-      "upstream": "openai/gpt-5.6-luna-max"
-    },
-    {
       "id": "deepseek/deepseek-v4.1-flash",
       "session": "deepseek/deepseek-v4.1-flash",
       "agent": "base2-free-deepseek-v4-1-flash",
@@ -136,15 +109,6 @@
       "base3_agent": null,
       "reviewer_agent": null,
       "upstream": "deepseek/deepseek-v4.1-flash"
-    },
-    {
-      "id": "deepseek/deepseek-v4.1-pro",
-      "session": "deepseek/deepseek-v4.1-pro",
-      "agent": "base2-free-deepseek-v4-1-pro",
-      "root_agent": "base2-free-deepseek-v4-1-pro",
-      "base3_agent": null,
-      "reviewer_agent": null,
-      "upstream": "deepseek/deepseek-v4.1-pro"
     },
     {
       "id": "z-ai/glm-5.3",
@@ -156,22 +120,373 @@
       "upstream": "z-ai/glm-5.3"
     },
     {
-      "id": "anthropic/claude-fable-5.1-test",
-      "session": "anthropic/claude-fable-5.1-test",
-      "agent": "base2-free-fable-test",
-      "root_agent": "base2-free-fable-test",
+      "id": "openai/gpt-6-sol",
+      "session": "openai/gpt-6-sol",
+      "agent": "base2-free-gpt-6-sol",
+      "root_agent": "base2-free-gpt-6-sol",
       "base3_agent": null,
       "reviewer_agent": null,
-      "upstream": "anthropic/claude-fable-5.1-test"
+      "upstream": "openai/gpt-6-sol"
     },
     {
-      "id": "openai/gpt-6-astra-discount-test",
-      "session": "openai/gpt-6-astra-discount-test",
-      "agent": "base2-free-astra-discount-test",
-      "root_agent": "base2-free-astra-discount-test",
+      "id": "openai/gpt-6-sol-pro",
+      "session": "openai/gpt-6-sol-pro",
+      "agent": "base2-free-gpt-6-sol-pro",
+      "root_agent": "base2-free-gpt-6-sol-pro",
       "base3_agent": null,
       "reviewer_agent": null,
-      "upstream": "openai/gpt-6-astra-discount-test"
+      "upstream": "openai/gpt-6-sol-pro"
+    },
+    {
+      "id": "openai/gpt-6-luna-pro",
+      "session": "openai/gpt-6-luna-pro",
+      "agent": "base2-free-gpt-6-luna-pro",
+      "root_agent": "base2-free-gpt-6-luna-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-6-luna-pro"
+    },
+    {
+      "id": "openai/gpt-6-astra",
+      "session": "openai/gpt-6-astra",
+      "agent": "base2-free-gpt-6-astra",
+      "root_agent": "base2-free-gpt-6-astra",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-6-astra"
+    },
+    {
+      "id": "openai/gpt-6-astra-pro",
+      "session": "openai/gpt-6-astra-pro",
+      "agent": "base2-free-gpt-6-astra-pro",
+      "root_agent": "base2-free-gpt-6-astra-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-6-astra-pro"
+    },
+    {
+      "id": "openai/gpt-5.6-sol",
+      "session": "openai/gpt-5.6-sol",
+      "agent": "base2-free-gpt-5-6-sol",
+      "root_agent": "base2-free-gpt-5-6-sol",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.6-sol"
+    },
+    {
+      "id": "openai/gpt-5.6-sol-pro",
+      "session": "openai/gpt-5.6-sol-pro",
+      "agent": "base2-free-gpt-5-6-sol-pro",
+      "root_agent": "base2-free-gpt-5-6-sol-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.6-sol-pro"
+    },
+    {
+      "id": "openai/gpt-5.6-terra",
+      "session": "openai/gpt-5.6-terra",
+      "agent": "base2-free-gpt-5-6-terra",
+      "root_agent": "base2-free-gpt-5-6-terra",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.6-terra"
+    },
+    {
+      "id": "openai/gpt-5.6-terra-pro",
+      "session": "openai/gpt-5.6-terra-pro",
+      "agent": "base2-free-gpt-5-6-terra-pro",
+      "root_agent": "base2-free-gpt-5-6-terra-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.6-terra-pro"
+    },
+    {
+      "id": "openai/gpt-5.6-luna-pro",
+      "session": "openai/gpt-5.6-luna-pro",
+      "agent": "base2-free-gpt-5-6-luna-pro",
+      "root_agent": "base2-free-gpt-5-6-luna-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.6-luna-pro"
+    },
+    {
+      "id": "openai/gpt-5.5",
+      "session": "openai/gpt-5.5",
+      "agent": "base2-free-gpt-5-5",
+      "root_agent": "base2-free-gpt-5-5",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.5"
+    },
+    {
+      "id": "openai/gpt-5.5-pro",
+      "session": "openai/gpt-5.5-pro",
+      "agent": "base2-free-gpt-5-5-pro",
+      "root_agent": "base2-free-gpt-5-5-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.5-pro"
+    },
+    {
+      "id": "openai/gpt-5.4-pro",
+      "session": "openai/gpt-5.4-pro",
+      "agent": "base2-free-gpt-5-4-pro",
+      "root_agent": "base2-free-gpt-5-4-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/gpt-5.4-pro"
+    },
+    {
+      "id": "openai/o3-pro",
+      "session": "openai/o3-pro",
+      "agent": "base2-free-o3-pro",
+      "root_agent": "base2-free-o3-pro",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "openai/o3-pro"
+    },
+    {
+      "id": "anthropic/claude-opus-5.5",
+      "session": "anthropic/claude-opus-5.5",
+      "agent": "base2-free-claude-opus-5-5",
+      "root_agent": "base2-free-claude-opus-5-5",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "anthropic/claude-opus-5.5"
+    },
+    {
+      "id": "anthropic/claude-opus-5",
+      "session": "anthropic/claude-opus-5",
+      "agent": "base2-free-claude-opus-5",
+      "root_agent": "base2-free-claude-opus-5",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "anthropic/claude-opus-5"
+    },
+    {
+      "id": "anthropic/claude-sonnet-5",
+      "session": "anthropic/claude-sonnet-5",
+      "agent": "base2-free-claude-sonnet-5",
+      "root_agent": "base2-free-claude-sonnet-5",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "anthropic/claude-sonnet-5"
+    },
+    {
+      "id": "anthropic/claude-opus-4.8",
+      "session": "anthropic/claude-opus-4.8",
+      "agent": "base2-free-claude-opus-4-8",
+      "root_agent": "base2-free-claude-opus-4-8",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "anthropic/claude-opus-4.8"
+    },
+    {
+      "id": "anthropic/claude-sonnet-4.6",
+      "session": "anthropic/claude-sonnet-4.6",
+      "agent": "base2-free-claude-sonnet-4-6",
+      "root_agent": "base2-free-claude-sonnet-4-6",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "anthropic/claude-sonnet-4.6"
+    },
+    {
+      "id": "qwen/qwen3.8-max-prime",
+      "session": "qwen/qwen3.8-max-prime",
+      "agent": "base2-free-qwen3-8-max-prime",
+      "root_agent": "base2-free-qwen3-8-max-prime",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.8-max-prime"
+    },
+    {
+      "id": "qwen/qwen3.8-max-0902",
+      "session": "qwen/qwen3.8-max-0902",
+      "agent": "base2-free-qwen3-8-max-0902",
+      "root_agent": "base2-free-qwen3-8-max-0902",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.8-max-0902"
+    },
+    {
+      "id": "qwen/qwen3.8-flash",
+      "session": "qwen/qwen3.8-flash",
+      "agent": "base2-free-qwen3-8-flash",
+      "root_agent": "base2-free-qwen3-8-flash",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.8-flash"
+    },
+    {
+      "id": "qwen/qwen3.8-27b",
+      "session": "qwen/qwen3.8-27b",
+      "agent": "base2-free-qwen3-8-27b",
+      "root_agent": "base2-free-qwen3-8-27b",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.8-27b"
+    },
+    {
+      "id": "qwen/qwen3.7-max",
+      "session": "qwen/qwen3.7-max",
+      "agent": "base2-free-qwen3-7-max",
+      "root_agent": "base2-free-qwen3-7-max",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.7-max"
+    },
+    {
+      "id": "qwen/qwen3.7-plus",
+      "session": "qwen/qwen3.7-plus",
+      "agent": "base2-free-qwen3-7-plus",
+      "root_agent": "base2-free-qwen3-7-plus",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.7-plus"
+    },
+    {
+      "id": "qwen/qwen3.6-max-preview",
+      "session": "qwen/qwen3.6-max-preview",
+      "agent": "base2-free-qwen3-6-max-preview",
+      "root_agent": "base2-free-qwen3-6-max-preview",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.6-max-preview"
+    },
+    {
+      "id": "qwen/qwen3.6-plus",
+      "session": "qwen/qwen3.6-plus",
+      "agent": "base2-free-qwen3-6-plus",
+      "root_agent": "base2-free-qwen3-6-plus",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "qwen/qwen3.6-plus"
+    },
+    {
+      "id": "x-ai/grok-4.7",
+      "session": "x-ai/grok-4.7",
+      "agent": "base2-free-grok-4-7",
+      "root_agent": "base2-free-grok-4-7",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "x-ai/grok-4.7"
+    },
+    {
+      "id": "x-ai/grok-4.6",
+      "session": "x-ai/grok-4.6",
+      "agent": "base2-free-grok-4-6",
+      "root_agent": "base2-free-grok-4-6",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "x-ai/grok-4.6"
+    },
+    {
+      "id": "x-ai/grok-4.5",
+      "session": "x-ai/grok-4.5",
+      "agent": "base2-free-grok-4-5",
+      "root_agent": "base2-free-grok-4-5",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "x-ai/grok-4.5"
+    },
+    {
+      "id": "x-ai/grok-4.20",
+      "session": "x-ai/grok-4.20",
+      "agent": "base2-free-grok-4-20",
+      "root_agent": "base2-free-grok-4-20",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "x-ai/grok-4.20"
+    },
+    {
+      "id": "google/gemini-3.7-flash",
+      "session": "google/gemini-3.7-flash",
+      "agent": "base2-free-gemini-3-7-flash",
+      "root_agent": "base2-free-gemini-3-7-flash",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "google/gemini-3.7-flash"
+    },
+    {
+      "id": "google/gemini-3.6-flash",
+      "session": "google/gemini-3.6-flash",
+      "agent": "base2-free-gemini-3-6-flash",
+      "root_agent": "base2-free-gemini-3-6-flash",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "google/gemini-3.6-flash"
+    },
+    {
+      "id": "google/gemini-3.5-flash",
+      "session": "google/gemini-3.5-flash",
+      "agent": "base2-free-gemini-3-5-flash",
+      "root_agent": "base2-free-gemini-3-5-flash",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "google/gemini-3.5-flash"
+    },
+    {
+      "id": "moonshotai/kimi-k3",
+      "session": "moonshotai/kimi-k3",
+      "agent": "base2-free-kimi-k3",
+      "root_agent": "base2-free-kimi-k3",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "moonshotai/kimi-k3"
+    },
+    {
+      "id": "z-ai/glm-5.3-prime",
+      "session": "z-ai/glm-5.3-prime",
+      "agent": "base2-free-glm-5-3-prime",
+      "root_agent": "base2-free-glm-5-3-prime",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "z-ai/glm-5.3-prime"
+    },
+    {
+      "id": "z-ai/glm-5.3-flashx",
+      "session": "z-ai/glm-5.3-flashx",
+      "agent": "base2-free-glm-5-3-flashx",
+      "root_agent": "base2-free-glm-5-3-flashx",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "z-ai/glm-5.3-flashx"
+    },
+    {
+      "id": "z-ai/glm-5-turbo",
+      "session": "z-ai/glm-5-turbo",
+      "agent": "base2-free-glm-5-turbo",
+      "root_agent": "base2-free-glm-5-turbo",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "z-ai/glm-5-turbo"
+    },
+    {
+      "id": "mistralai/mistral-large",
+      "session": "mistralai/mistral-large",
+      "agent": "base2-free-mistral-large",
+      "root_agent": "base2-free-mistral-large",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "mistralai/mistral-large"
+    },
+    {
+      "id": "mistralai/codestral-2508",
+      "session": "mistralai/codestral-2508",
+      "agent": "base2-free-codestral-2508",
+      "root_agent": "base2-free-codestral-2508",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "mistralai/codestral-2508"
+    },
+    {
+      "id": "meta-llama/llama-4-maverick",
+      "session": "meta-llama/llama-4-maverick",
+      "agent": "base2-free-llama-4-maverick",
+      "root_agent": "base2-free-llama-4-maverick",
+      "base3_agent": null,
+      "reviewer_agent": null,
+      "upstream": "meta-llama/llama-4-maverick"
     }
   ],
   "pools": {
@@ -189,14 +504,49 @@
       "anthropic/claude-fable-5.1",
       "meta/muse-spark-1.2-contributor",
       "google/gemini-3.8-flash",
-      "deepseek/deepseek-v4-pro-max",
-      "deepseek/deepseek-v4-flash-max",
-      "openai/gpt-5.6-luna-max",
       "deepseek/deepseek-v4.1-flash",
-      "deepseek/deepseek-v4.1-pro",
       "z-ai/glm-5.3",
-      "anthropic/claude-fable-5.1-test",
-      "openai/gpt-6-astra-discount-test"
+      "openai/gpt-6-sol",
+      "openai/gpt-6-sol-pro",
+      "openai/gpt-6-luna-pro",
+      "openai/gpt-6-astra",
+      "openai/gpt-6-astra-pro",
+      "openai/gpt-5.6-sol",
+      "openai/gpt-5.6-sol-pro",
+      "openai/gpt-5.6-terra",
+      "openai/gpt-5.6-terra-pro",
+      "openai/gpt-5.6-luna-pro",
+      "openai/gpt-5.5",
+      "openai/gpt-5.5-pro",
+      "openai/gpt-5.4-pro",
+      "openai/o3-pro",
+      "anthropic/claude-opus-5.5",
+      "anthropic/claude-opus-5",
+      "anthropic/claude-sonnet-5",
+      "anthropic/claude-opus-4.8",
+      "anthropic/claude-sonnet-4.6",
+      "qwen/qwen3.8-max-prime",
+      "qwen/qwen3.8-max-0902",
+      "qwen/qwen3.8-flash",
+      "qwen/qwen3.8-27b",
+      "qwen/qwen3.7-max",
+      "qwen/qwen3.7-plus",
+      "qwen/qwen3.6-max-preview",
+      "qwen/qwen3.6-plus",
+      "x-ai/grok-4.7",
+      "x-ai/grok-4.6",
+      "x-ai/grok-4.5",
+      "x-ai/grok-4.20",
+      "google/gemini-3.7-flash",
+      "google/gemini-3.6-flash",
+      "google/gemini-3.5-flash",
+      "moonshotai/kimi-k3",
+      "z-ai/glm-5.3-prime",
+      "z-ai/glm-5.3-flashx",
+      "z-ai/glm-5-turbo",
+      "mistralai/mistral-large",
+      "mistralai/codestral-2508",
+      "meta-llama/llama-4-maverick"
     ]
   },
   "paused": [
