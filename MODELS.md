@@ -1,4 +1,4 @@
-# Freebuff 可用模型（2026-10-07 02:14:10 北京时间）
+# Freebuff 可用模型（2026-10-07 13:33:36 北京时间）
 
 > 自动生成 · 来源：[CodebuffAI/freebuff](https://github.com/CodebuffAI/freebuff) main · 更新频率：每 6 小时
 
@@ -53,7 +53,6 @@
 - `qwen/qwen3.8-flash` —— qwen/qwen3.8-flash
 - `qwen/qwen3.8-max-0902` —— qwen/qwen3.8-max-0902
 - `qwen/qwen3.8-max-prime` —— qwen/qwen3.8-max-prime
-- `stealth/space-bunny-alpha` —— stealth/space-bunny-alpha
 - `x-ai/grok-4.20` —— x-ai/grok-4.20
 - `x-ai/grok-4.5` —— x-ai/grok-4.5
 - `x-ai/grok-4.6` —— x-ai/grok-4.6
@@ -75,7 +74,8 @@
 - `minimax/minimax-m3` —— MiniMax M3（综合能力强，中文优秀）
 - `openai/gpt-5.6-luna` —— GPT-5.6 Luna（OpenAI 最新，推理顶尖）
 - `stealth/ox-alpha` —— Ox Alpha（实验性模型）
+- `stealth/space-bunny-alpha` —— stealth/space-bunny-alpha
 - `z-ai/glm-5.2` —— GLM 5.2（智谱 AI，推荐解锁后使用）
 
 ---
-共 56 个模型 · 上次更新：2026-10-07 02:14:10
+共 55 个模型 · 上次更新：2026-10-07 13:33:36
